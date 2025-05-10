@@ -32,15 +32,7 @@ set RTT_CC=gcc
 REM @if "%REG_GCC_PATH%"=="" goto :PRINT_GCC_PATH_ERROR
 REM @set RTT_EXEC_PATH=%REG_GCC_PATH%
 
-if defined REG_GCC_PATH (
-    set RTT_EXEC_PATH=%REG_GCC_PATH%
-) else (
-    if defined RTT_GCC_EXEC_PATH (
-        set RTT_EXEC_PATH=%RTT_GCC_EXEC_PATH%
-    ) else (
-        set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc\bin
-    )
-)
+set RTT_EXEC_PATH=%ENV_ROOT%\tools\gnu_gcc\arm_gcc_14.2.1\bin
 goto :CHECK
 
 :SET_IAR
