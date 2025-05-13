@@ -53,10 +53,18 @@
 //#include "rtdef.h"
 //#include "rthw.h"
 
+//#ifndef CFG_BOOTLOADER
+//#define RF_PRINT_ON
+//#endif
 
 #define _HAL_Delay_us(x) HAL_Delay_us(x)
-//#define RF_PRINTF rt_kprintf
-#define RF_PRINTF(...)
+
+#ifdef RF_PRINT_ON
+    extern void rt_kprintf(const char *fmt, ...);
+    #define RF_PRINTF rt_kprintf
+#else
+    #define RF_PRINTF(...)
+#endif
 
 #define RF_PWR_PARA(max, min, init, is_bqb) (uint32_t)((is_bqb << 24) | (init << 16) | (min << 8) | (int8_t)(max))
 
@@ -5233,7 +5241,7 @@ void bt_rf_cal(void)
     HAL_Set_backup(RTC_BACKUP_BT_TXPWR, RF_PWR_PARA(bt_rf_get_max_tx_pwr(), bt_rf_get_min_tx_pwr(), bt_rf_get_init_tx_pwr(), (0x80 | bt_is_in_BQB_mode())));
 #endif
 }
-char *g_rf_ful_ver = "1.1.9_2841";
+char *g_rf_ful_ver = "1.1.9_3039";
 char *rf_ful_ver(uint8_t *cal_en)
 {
     *cal_en = 0xFF;
