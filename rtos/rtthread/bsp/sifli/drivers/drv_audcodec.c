@@ -53,7 +53,10 @@
 #include <math.h>
 #include "board.h"
 #include "drv_config.h"
-
+#ifdef SF32LB58X
+    #undef BSP_ENABLE_DAC2
+    #define BSP_ENABLE_DAC2     1
+#endif
 #if defined (SYS_HEAP_IN_PSRAM)
     #undef calloc
     #undef free

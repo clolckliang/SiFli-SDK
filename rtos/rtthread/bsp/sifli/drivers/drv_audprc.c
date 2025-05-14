@@ -1931,6 +1931,13 @@ void HAL_AUDPRC_TxHalfCpltCallback(AUDPRC_HandleTypeDef *haprc, int cid)
     }
 }
 
+typedef void (*dual_adc_rx_callback)(uint8_t channel_id, uint8_t *data, rt_size_t len);
+static dual_adc_rx_callback rx_callback = NULL;
+void rt_device_set_dual_rx_indicate(dual_adc_rx_callback func)
+{
+    rx_callback = func;
+}
+
 void HAL_AUDPRC_RxCpltCallback(AUDPRC_HandleTypeDef *haprc, int cid)
 {
     struct bf0_audio_prc *haudio = rt_container_of(haprc, struct bf0_audio_prc, audprc);
@@ -1950,7 +1957,15 @@ void HAL_AUDPRC_RxCpltCallback(AUDPRC_HandleTypeDef *haprc, int cid)
         else
         {
             haudio->queue_buf[cid] = (rt_uint8_t *)((uint32_t)(haprc->buf[cid]) + haprc->bufRxSize / 2);
-            rt_audio_rx_done(audio, haudio->queue_buf[cid], haprc->bufRxSize / 2);
+            if (rx_callback)
+            {
+                rx_callback(cid - HAL_AUDPRC_RX_CH0, haudio->queue_buf[cid], haprc->bufRxSize / 2);
+                return;
+            }
+            else
+            {
+                rt_audio_rx_done(audio, haudio->queue_buf[cid], haprc->bufRxSize / 2);
+            }
         }
         if (haudio->rx_rbf_enable)
         {
@@ -1974,7 +1989,15 @@ void HAL_AUDPRC_RxHalfCpltCallback(AUDPRC_HandleTypeDef *haprc, int cid)
     if (audio != NULL)
     {
         haudio->queue_buf[cid] = haprc->buf[cid];
-        rt_audio_rx_done(audio, haudio->queue_buf[cid], haprc->bufRxSize / 2);
+        if (rx_callback)
+        {
+            rx_callback(cid - HAL_AUDPRC_RX_CH0, haudio->queue_buf[cid], haprc->bufRxSize / 2);
+            return;
+        }
+        else
+        {
+            rt_audio_rx_done(audio, haudio->queue_buf[cid], haprc->bufRxSize / 2);
+        }
         if (haudio->rx_rbf_enable)
         {
             rt_size_t putsize;
