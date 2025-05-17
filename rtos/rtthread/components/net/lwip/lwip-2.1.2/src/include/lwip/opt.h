@@ -556,7 +556,7 @@
  * (only needed if you use tcpip.c)
  */
 #if !defined MEMP_NUM_TCPIP_MSG_INPKT || defined __DOXYGEN__
-    #define MEMP_NUM_TCPIP_MSG_INPKT        8
+    #define MEMP_NUM_TCPIP_MSG_INPKT        16
 #endif
 
 /**
