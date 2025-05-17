@@ -26,7 +26,7 @@
             }, 
             {
                 "offset": "0x00020000", 
-                "max_size": "0x00200000", 
+                "max_size": "0x00700000", 
                 "tags": [
                     "HCPU_FLASH_CODE"
                 ], 
@@ -41,7 +41,7 @@
                 "exec": "main"
             }, 
             {
-                "offset": "0x00220000",
+                "offset": "0x00720000",
                 "max_size": "0x00060000",
                 "tags": [
                     "DFU_FLASH_CODE"
@@ -57,29 +57,29 @@
                 }
             },
             {
-                "offset": "0x00280000",
+                "offset": "0x00780000",
                 "max_size": "0x00120000",
                 "tags": [
                     "DFU_DOWNLOAD_REGION"
                 ]
             },
             {
-                "offset": "0x003A0000",
-                "max_size": "0x00280000",
+                "offset": "0x008A0000",
+                "max_size": "0x00400000",
                 "img": "fs_root", 
                 "tags": [
                     "FS_REGION"
                 ]
             }, 
             {
-                "offset": "0x00620000", 
+                "offset": "0x00CA0000", 
                 "max_size": "0x00004000", 
                 "tags": [
                     "KVDB_DFU_REGION"
                 ]
             }, 
             {
-                "offset": "0x00624000", 
+                "offset": "0x00CA4000", 
                 "max_size": "0x00004000", 
                 "tags": [
                     "KVDB_BLE_REGION"
@@ -106,7 +106,7 @@
         "regions": [
             {
                 "offset": "0x00000000", 
-                "max_size": "0x0006BC00", 
+                "max_size": "0x0007FC00", 
                 "tags": [
                     "HCPU_RAM_DATA"
                 ]
@@ -133,8 +133,8 @@
                 ]
             }, 
             {
-                "offset": "0x0006BC00", 
-                "max_size": "0x00014000", 
+                "offset": "0x0007FC00", 
+                "max_size": "0x00000000", 
                 "tags": [
                     "HCPU_RO_DATA"
                 ]
