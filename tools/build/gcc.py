@@ -80,25 +80,23 @@ def GCCResult(rtconfig, str):
 
     # gcc_cmd = os.path.join(rtconfig.EXEC_PATH, rtconfig.CC)
     gcc_cmd = rtconfig.CC
-
+    
+    # 使用os.path.join构建临时文件的完整路径
+    tmp_file_path = os.path.join(rtconfig.OUTPUT_DIR, '__tmp.c')
+    
     # use temp file to get more information 
-    f = open('__tmp.c', 'w')
-    if f:
+    with open(tmp_file_path, 'w') as f:
         f.write(str)
-        f.close()
 
-        # '-fdirectives-only', 
-        if(platform.system() == 'Windows'):
-            child = subprocess.Popen([gcc_cmd, '-E', '-P', '__tmp.c'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        else:
-            child = subprocess.Popen(gcc_cmd + ' -E -P __tmp.c', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        
-        stdout, stderr = child.communicate()
+    # '-fdirectives-only', 
+    if(platform.system() == 'Windows'):
+        child = subprocess.Popen([gcc_cmd, '-E', '-P', tmp_file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    else:
+        child = subprocess.Popen(gcc_cmd + ' -E -P ' + tmp_file_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    
+    stdout, stderr = child.communicate()
 
-        # print(stdout)
-        if stderr != '':
-            print(stderr)
-
+    if stdout != '':
         have_fdset = 0
         have_sigaction = 0
         have_sigevent = 0
@@ -152,7 +150,8 @@ def GCCResult(rtconfig, str):
         if posix_thread:
             result += '#define LIBC_POSIX_THREADS 1\n'
 
-        os.remove('__tmp.c')
+        # 删除临时文件
+        os.remove(tmp_file_path)
     return result
 
 def GenerateGCCConfig(rtconfig, path=''):
