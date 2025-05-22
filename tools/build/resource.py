@@ -1084,17 +1084,72 @@ def BuildJLinkLoadScript(main_env):
     device = main_env['JLINK_DEVICE']
     device = device.split('_')[0][:-1]
 
-    download_list = ' '.join(f"\"{file['name']}@0x{file['addr']:08X}\"" for file in download_file)
+    download_list = ' '.join(
+        f"\"{file['name']}\"" if file['name'].lower().endswith(('.elf', '.hex')) 
+        else f"\"{file['name']}@0x{file['addr']:08X}\"" 
+        for file in download_file
+    )
 
-    uart_comment = '@echo off\ntitle=uart download\nset WORK_PATH=%~dp0\nset CURR_PATH=%cd%\ncd %WORK_PATH%\n:start\necho,\necho      \
-Uart Download\necho,\nset /p input=please input the serial port num:\ngoto download\n:download\necho com%input%\n'
+    generate_uart_download_bat(main_env, device, download_list, ImgDownUart_PATH)
+    generate_uart_download_sh(main_env, device, download_list, ImgDownUart_PATH)
+
+
+def generate_uart_download_bat(main_env, device, download_list, ImgDownUart_PATH):
+    uart_comment = '''@echo off
+title=uart download
+set WORK_PATH=%~dp0
+set CURR_PATH=%cd%
+cd %WORK_PATH%
+:start
+echo,
+echo      Uart Download
+echo,
+set /p input=please input the serial port num:
+goto download
+:download
+echo com%input%
+'''
     if os.getenv("LEGACY_ENV"):
-        uart_comment += MakeLine('{} --func 0 --port com%input% --baund 3000000 --loadram 1 --postact 1 --verify --device {} \
-    --file ImgBurnList.ini --log ImgBurn.log\nif %errorlevel%==0 (\n    echo Download Successful\n)else (\n    echo Download Failed\n    \
-    echo logfile:%WORK_PATH%ImgBurn.log\n)\ncd %CURR_PATH%\n'.format(ImgDownUart_PATH, main_env['JLINK_DEVICE']))
+        uart_comment += MakeLine('''{}  --func 0 --port com%input% --baund 1000000 --loadram 1 --postact 1 --verify --device {} --file ImgBurnList.ini --log ImgBurn.log
+if %errorlevel%==0 (
+    echo Download Successful
+)else (
+    echo Download Failed
+    echo logfile:%WORK_PATH%ImgBurn.log
+)
+cd %CURR_PATH%
+'''.format(ImgDownUart_PATH, main_env['JLINK_DEVICE']))
     else:
         uart_comment += MakeLine(f"sftool -p COM%input% -c {device} write_flash {download_list}\n")
     uart_comment += MakeLine('if "%ENV_ROOT%"=="" pause\n')
+    
     uart_f = open(os.path.join(main_env['build_dir'], 'uart_download.bat'), 'w')
     uart_f.write(uart_comment)
     uart_f.close()
+
+def generate_uart_download_sh(main_env, device, download_list, ImgDownUart_PATH):
+    uart_comment = '''#!/bin/bash
+
+WORK_PATH=$(dirname "$0")
+CURR_PATH=$(pwd)
+cd "$WORK_PATH"
+
+echo ""
+echo "      Uart Download"
+echo ""
+read -p "please input the serial port (e.g. /dev/ttyUSB0): " input
+echo "$input"
+
+'''
+    
+    if os.getenv("LEGACY_ENV"):
+        uart_comment += MakeLine('echo "Legacy mode is not supported on Linux/macOS"')
+    else:
+        uart_comment += MakeLine(f'sftool -p "$input" -c {device} write_flash {download_list}\n')
+    
+    uart_sh_path = os.path.join(main_env['build_dir'], 'uart_download.sh')
+    uart_f = open(uart_sh_path, 'w')
+    uart_f.write(uart_comment)
+    uart_f.close()
+    
+    os.chmod(uart_sh_path, 0o755)
