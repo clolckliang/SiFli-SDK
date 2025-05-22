@@ -28,7 +28,6 @@ done
 FEATURES=$("${SIFLI_PYTHON}" "${SIFLI_SDK_PATH}/tools/install_util.py" extract features "$@")
 
 echo "Installing Python environment and packages"
-"${SIFLI_PYTHON}" "-m" "pip" "install" "requests"
 "${SIFLI_PYTHON}" "${SIFLI_SDK_PATH}/tools/sifli_sdk_tools.py" install-python-env --features="${FEATURES}"
 
 python_venv_path=$("${SIFLI_PYTHON}" "${SIFLI_SDK_PATH}/tools/sifli_sdk_tools.py" "get-install-python-env")
