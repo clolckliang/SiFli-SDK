@@ -1,5 +1,3 @@
-<<<<<<< PATCH SET (283343 [int][bug][edut file_system] Split file_system)
-=======
 #include "rtthread.h"
 #include "bf0_hal.h"
 #include "drv_io.h"
@@ -16,7 +14,10 @@
 #endif
 int mnt_init(void)
 {
+    // rt_kprintf("FS_REGION_START_ADDR = %p\n", FS_REGION_START_ADDR);
+    // rt_kprintf("FS_REGION_SIZE = %p\n", FS_REGION_SIZE);
     register_mtd_device(FS_REGION_START_ADDR, FS_REGION_SIZE, FS_ROOT);
+
     if (dfs_mount(FS_ROOT, "/", "elm", 0, 0) == 0) // fs exist
     {
         rt_kprintf("mount fs on flash to root success\n");
@@ -58,4 +59,3 @@ int main(void)
     return 0;
 }
 
->>>>>>> BASE      (87f518 [opt][board] Change rc32k freq to 32000Hz and remove unused )
