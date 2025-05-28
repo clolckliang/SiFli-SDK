@@ -1,4 +1,4 @@
-config BSP_USING_BOARD_SF32LB52_ULP
+config BSP_USING_BOARD_SF32LB52_LCHSPI_ULP 
     bool
     select SOC_SF32LB52X
     select BF0_LCPU
