@@ -204,7 +204,7 @@ extern "C" {
 #define AUDPRC_RX0_DMA_IRQ                     DMAC1_CH4_IRQn
 
 
-#define GPADC_IRQHandler                       DMAC1_CH4_IRQHandler
+#define GPADC_DMA_IRQHandler                   DMAC1_CH4_IRQHandler
 #define GPADC_DMA_IRQ_PRIO                     0
 #define GPADC_DMA_INSTANCE                     DMA1_Channel4
 #define GPADC_DMA_IRQ                          DMAC1_CH4_IRQn

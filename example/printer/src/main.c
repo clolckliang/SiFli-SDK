@@ -92,7 +92,7 @@ static int sleep(int argc, char **argv)
                 HAL_PIN_Set(i, i - PAD_PA28 + GPIO_A28, PIN_PULLDOWN, 1);
             }
             //disable ldo
-#ifndef SF32LB52X_58
+#ifdef SF32LB52X
             hwp_pmuc->PERI_LDO &=  ~(PMUC_PERI_LDO_EN_LDO18 | PMUC_PERI_LDO_EN_VDD33_LDO2 | PMUC_PERI_LDO_EN_VDD33_LDO3);
 #endif
 

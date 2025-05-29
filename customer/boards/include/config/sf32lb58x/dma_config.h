@@ -558,7 +558,7 @@ extern "C" {
 
 /* DMA3 channel5 */
 #if defined(BSP_GPADC_USING_DMA) && !defined(GPADC_DMA_INSTANCE)
-#define GPADC_IRQHandler              DMAC3_CH5_IRQHandler
+#define GPADC_DMA_IRQHandler              DMAC3_CH5_IRQHandler
 #define GPADC_DMA_IRQ_PRIO            0
 #define GPADC_DMA_INSTANCE            DMA3_Channel5
 #define GPADC_DMA_IRQ                 DMAC3_CH5_IRQn
@@ -566,7 +566,7 @@ extern "C" {
 
 /* DMA3 channel5 */
 #if defined(BSP_SDADC_USING_DMA) && !defined(SDADC_DMA_INSTANCE)
-#define SDADC_IRQHandler              DMAC3_CH5_IRQHandler
+#define SDADC_DMA_IRQHandler              DMAC3_CH5_IRQHandler
 #define SDADC_DMA_IRQ_PRIO            0
 #define SDADC_DMA_INSTANCE            DMA3_Channel5
 #define SDADC_DMA_IRQ                 DMAC3_CH5_IRQn

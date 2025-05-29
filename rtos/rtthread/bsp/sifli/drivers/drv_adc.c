@@ -68,6 +68,13 @@
 // New code default output voltage with rt_device_read, not register value, do not call calculate functin again !!!
 // ONLY for debug, rt_device_read return register value, need calculte to voltage manual.
 //#define ADC_DEBUG
+enum
+{
+#ifdef BSP_USING_ADC1
+    ADC1_INDEX,
+#endif
+    ADC_MAX
+};
 
 static ADC_HandleTypeDef adc_config[] =
 {
@@ -370,7 +377,20 @@ void GPADC_IRQHandler(void)
 }
 #endif
 #endif
+#if defined(BSP_GPADC_USING_DMA)
 
+#ifdef DMA_SUPPORT_DYN_CHANNEL_ALLOC
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+    /*if need do something , add here*/
+}
+#else
+void GPADC_DMA_IRQHandler(void)
+{
+    HAL_DMA_IRQHandler(sifli_adc_obj[ADC1_INDEX].ADC_Handler.DMA_Handle);
+}
+#endif
+#endif
 /**
 * @brief  Get voltage by register value.
 * @param[in]  value register value.
@@ -859,6 +879,15 @@ static int sifli_adc_init(void)
             hadc->DMA_Handle->Init.MemInc              = DMA_MINC_ENABLE;
             hadc->DMA_Handle->Init.Mode                = DMA_NORMAL;
             hadc->DMA_Handle->Init.Priority            = DMA_PRIORITY_MEDIUM;
+#ifdef DMA_SUPPORT_DYN_CHANNEL_ALLOC
+            hadc->DMA_Handle->Init.IrqPrio = GPADC_DMA_IRQ_PRIO;
+#endif /* DMA_SUPPORT_DYN_CHANNEL_ALLOC */
+
+            HAL_ADC_DMA_PREPARE(hadc);
+
+#ifndef DMA_SUPPORT_DYN_CHANNEL_ALLOC
+            HAL_NVIC_SetPriority(GPADC_DMA_IRQ, 0, 0);
+#endif /* !DMA_SUPPORT_DYN_CHANNEL_ALLOC */
         }
 #endif
 #ifndef SF32LB55X

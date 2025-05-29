@@ -350,7 +350,7 @@ extern "C" {
 
 
 /* DMA2 channel5 */
-#define GPADC_IRQHandler              DMAC2_CH5_IRQHandler
+#define GPADC_DMA_IRQHandler              DMAC2_CH5_IRQHandler
 #define GPADC_DMA_IRQ_PRIO                 0
 #define GPADC_DMA_INSTANCE            DMA2_Channel5
 #define GPADC_DMA_IRQ                 DMAC2_CH5_IRQn
