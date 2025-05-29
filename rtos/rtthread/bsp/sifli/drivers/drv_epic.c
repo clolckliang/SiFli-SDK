@@ -596,6 +596,11 @@ static void gpu_lock(drv_epic_op_type_t ops,
                      void *p2,
                      void *p3)
 {
+#define CALC_LAYER_SIZE(layer) \
+        (RT_ALIGN((layer)->total_width * (layer)->height * HAL_EPIC_GetColorDepth((layer)->color_mode), 8) >> 3)
+#define GET_LAYER_SIZE(layer) \
+        (EPIC_IS_EZIP_COLOR_MODE((layer)->color_mode))?((layer)->data_size):CALC_LAYER_SIZE(layer)
+
     gpu_log_start(ops, p1, p2, p3);
 
     RT_ASSERT((0 == drv_epic.gpu_fg_addr) && (0 == drv_epic.gpu_bg_addr) && (0 == drv_epic.gpu_mask_addr));
@@ -618,12 +623,11 @@ static void gpu_lock(drv_epic_op_type_t ops,
         drv_epic.gpu_fg_addr = (uint32_t) fg->data;
         drv_epic.gpu_bg_addr = (uint32_t) bg->data;
 
-        bg_size = bg->data_size;
-        fg_size = fg->data_size;
+        bg_size = GET_LAYER_SIZE(bg);
+        fg_size = GET_LAYER_SIZE(fg);
 
         drv_epic.gpu_output_addr = (uint32_t) dst->data;
-        drv_epic.gpu_output_size = dst->data_size;
-
+        drv_epic.gpu_output_size = CALC_LAYER_SIZE(dst);
     }
     break;
 
@@ -646,16 +650,16 @@ static void gpu_lock(drv_epic_op_type_t ops,
         if (mask)
         {
             drv_epic.gpu_mask_addr = (uint32_t) mask->data;
-            mask_size = mask->data_size;
+            mask_size = GET_LAYER_SIZE(mask);
         }
         drv_epic.gpu_fg_addr = (uint32_t) fg->data;
         drv_epic.gpu_bg_addr = (uint32_t) bg->data;
 
-        bg_size = bg->data_size;
-        fg_size = fg->data_size;
+        bg_size = GET_LAYER_SIZE(bg);
+        fg_size = GET_LAYER_SIZE(fg);
 
         drv_epic.gpu_output_addr = (uint32_t) dst->data;
-        drv_epic.gpu_output_size = dst->data_size;
+        drv_epic.gpu_output_size = CALC_LAYER_SIZE(dst);
 
     }
     break;
@@ -669,12 +673,12 @@ static void gpu_lock(drv_epic_op_type_t ops,
         RT_ASSERT(NULL != param);
 
         drv_epic.gpu_output_addr = (uint32_t) param->data;
-        drv_epic.gpu_output_size = param->data_size;
+        drv_epic.gpu_output_size = CALC_LAYER_SIZE(param);
 
         if (mask)
         {
             drv_epic.gpu_mask_addr = (uint32_t) mask->data;
-            mask_size = mask->data_size;
+            mask_size = GET_LAYER_SIZE(mask);
         }
 
 
@@ -690,11 +694,11 @@ static void gpu_lock(drv_epic_op_type_t ops,
 
         drv_epic.gpu_fg_addr = (uint32_t) fg->data;
         drv_epic.gpu_bg_addr = drv_epic.gpu_fg_addr;
-        fg_size = fg->data_size;
+        fg_size = GET_LAYER_SIZE(fg);
         bg_size = fg_size;
 
         drv_epic.gpu_output_addr = (uint32_t) dst->data;
-        drv_epic.gpu_output_size = dst->data_size;
+        drv_epic.gpu_output_size = CALC_LAYER_SIZE(dst);
     }
     break;
 
@@ -703,8 +707,7 @@ static void gpu_lock(drv_epic_op_type_t ops,
         EPIC_GradCfgTypeDef *param = p3;
 
         drv_epic.gpu_output_addr = (uint32_t) param->start;
-        drv_epic.gpu_output_size = RT_ALIGN((param->total_width * param->height
-                                             * HAL_EPIC_GetColorDepth(param->color_mode)), 8) >> 3;
+        drv_epic.gpu_output_size = CALC_LAYER_SIZE(param);
     }
     break;
 
