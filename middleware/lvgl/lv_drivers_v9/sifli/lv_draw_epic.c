@@ -154,14 +154,39 @@ static inline bool cf_supported(lv_color_format_t cf, uint32_t flags)
     //Ezip images
     if ((LV_COLOR_FORMAT_RAW == cf || LV_COLOR_FORMAT_RAW_ALPHA == cf) && (0 != (flags & LV_IMAGE_FLAGS_EZIP)))
         return true;
+    //Normal images
+    if (LV_COLOR_FORMAT_RGB565 == cf || LV_COLOR_FORMAT_ARGB8565 == cf ||
+            LV_COLOR_FORMAT_RGB888 == cf || LV_COLOR_FORMAT_ARGB8888 == cf ||
+            LV_COLOR_FORMAT_XRGB8888 == cf)
+        return true;
 
-    bool is_cf_unsupported = (LV_COLOR_FORMAT_I1 == cf
-                              || LV_COLOR_FORMAT_I2 == cf
-                              || LV_COLOR_FORMAT_I4 == cf
-                              || LV_COLOR_FORMAT_UNKNOWN == cf
-                             );
+#ifdef EPIC_SUPPORT_A8
+    if (LV_COLOR_FORMAT_A8 == cf) return true;
+#endif /*EPIC_SUPPORT_A8*/
 
-    return (!is_cf_unsupported);
+#ifdef EPIC_SUPPORT_MASK
+    if (LV_COLOR_FORMAT_RGB565A8 == cf) return true;
+#endif
+
+#ifdef EPIC_SUPPORT_A4
+    if (LV_COLOR_FORMAT_A4 == cf) return true;
+#endif /*EPIC_SUPPORT_A4*/
+
+#ifdef EPIC_SUPPORT_A2
+    if (LV_COLOR_FORMAT_A2 == cf) return true;
+#endif /*EPIC_SUPPORT_A2*/
+
+#ifdef EPIC_SUPPORT_L8
+    if ((LV_COLOR_FORMAT_I8 == cf) || (LV_COLOR_FORMAT_L8 == cf)) return true;
+#endif /*EPIC_SUPPORT_L8*/
+
+#ifdef EPIC_SUPPORT_YUV
+    if (LV_COLOR_FORMAT_I420 == cf || LV_COLOR_FORMAT_YUY2 == cf || LV_COLOR_FORMAT_UYVY == cf)
+        return true;
+#endif /*EPIC_SUPPORT_YUV*/
+
+
+    return false;
 }
 
 static int32_t evaluate(lv_draw_unit_t *draw_unit, lv_draw_task_t *t)
@@ -205,7 +230,7 @@ static int32_t evaluate(lv_draw_unit_t *draw_unit, lv_draw_task_t *t)
         return 1;
 
 #endif
-
+#ifdef EPIC_SUPPORT_A8
     case LV_DRAW_TASK_TYPE_LABEL:
         if (t->preference_score > 95)
         {
@@ -213,6 +238,7 @@ static int32_t evaluate(lv_draw_unit_t *draw_unit, lv_draw_task_t *t)
             t->preferred_draw_unit_id = DRAW_UNIT_ID_EPIC;
         }
         return 1;
+#endif /*EPIC_SUPPORT_A8*/
 
     case LV_DRAW_TASK_TYPE_BORDER:
     {

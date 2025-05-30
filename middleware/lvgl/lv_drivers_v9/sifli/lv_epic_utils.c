@@ -92,9 +92,11 @@ uint32_t lv_img_2_epic_cf(lv_color_format_t cf)
     case LV_COLOR_FORMAT_RGB565:
         color_mode = EPIC_INPUT_RGB565;
         break;
+#ifdef EPIC_SUPPORT_MASK
     case LV_COLOR_FORMAT_RGB565A8:
         color_mode = EPIC_INPUT_RGB565;
         break;
+#endif /*EPIC_SUPPORT_MASK*/
 
     /*3 byte (+alpha) formats*/
     case LV_COLOR_FORMAT_RGB888:
@@ -104,14 +106,46 @@ uint32_t lv_img_2_epic_cf(lv_color_format_t cf)
     case LV_COLOR_FORMAT_XRGB8888:
         color_mode = EPIC_INPUT_ARGB8888;
         break;
-
-    case LV_COLOR_FORMAT_A8:
-        color_mode = EPIC_INPUT_A8;
-        break;
-
     case LV_COLOR_FORMAT_ARGB8565:
         color_mode = EPIC_INPUT_ARGB8565;
         break;
+
+#ifdef EPIC_SUPPORT_A8
+    case LV_COLOR_FORMAT_A8:
+        color_mode = EPIC_INPUT_A8;
+        break;
+#endif /*EPIC_SUPPORT_A8*/
+
+#ifdef EPIC_SUPPORT_A4
+    case LV_COLOR_FORMAT_A4:
+        color_mode = EPIC_INPUT_A4;
+        break;
+#endif /*EPIC_SUPPORT_A4*/
+
+#ifdef EPIC_SUPPORT_A2
+    case LV_COLOR_FORMAT_A2:
+        color_mode = EPIC_INPUT_A2;
+        break;
+#endif /*EPIC_SUPPORT_A2*/
+
+#ifdef EPIC_SUPPORT_L8
+    case LV_COLOR_FORMAT_I8:
+    case LV_COLOR_FORMAT_L8:
+        color_mode = EPIC_INPUT_L8;
+        break;
+#endif /*EPIC_SUPPORT_L8*/
+
+#ifdef EPIC_SUPPORT_YUV
+    case LV_COLOR_FORMAT_I420:
+        color_mode = EPIC_INPUT_YUV420_PLANAR;
+        break;
+    case LV_COLOR_FORMAT_YUY2:
+        color_mode = EPIC_INPUT_YUV422_PACKED_YUYV;
+        break;
+    case LV_COLOR_FORMAT_UYVY:
+        color_mode = EPIC_INPUT_YUV422_PACKED_UYVY;
+        break;
+#endif /*EPIC_SUPPORT_YUV*/
 
     default:
         LV_LOG_USER("format %d \r\n", cf);
