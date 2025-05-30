@@ -40,7 +40,7 @@
             },
             {
                 "offset": "0x00020000", 
-                "max_size": "0x00050000", 
+                "max_size": "0x000A0000", 
                 "tags": [
                     "HCPU_FLASH_CODE"
                 ], 
@@ -55,8 +55,8 @@
                 "exec": "main"
             }, 
             {
-                "offset": "0x00070000", 
-                "max_size": "0x00090000", 
+                "offset": "0x000C0000", 
+                "max_size": "0x00040000", 
                 "img": "fs_root", 
                 "tags": [
                     "FS_REGION"
