@@ -20,7 +20,7 @@ typedef struct _ffmpeg_mem_header
 #endif
 
 L2_RET_BSS_SECT_BEGIN(ffmpeg_heap2)
-ALIGN(4) uint8_t ffmpeg_heap[MEDIA_CACHE_SIZE];
+ALIGN(4) uint8_t ffmpeg_heap[MEDIA_CACHE_SIZE] L2_RET_BSS_SECT(ffmpeg_heap2);
 L2_RET_BSS_SECT_END
 
 

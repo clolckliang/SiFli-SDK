@@ -134,7 +134,7 @@ typedef struct
 static ble_talker_t *g_talker = NULL;
 
 L2_RET_BSS_SECT_BEGIN(g_opus_stack)
-static  uint32_t g_opus_stack[OPUS_STACK_SIZE / sizeof(uint32_t)];
+static  uint32_t g_opus_stack[OPUS_STACK_SIZE / sizeof(uint32_t)] L2_RET_BSS_SECT(g_opus_stack);
 L2_RET_BSS_SECT_END
 
 /*

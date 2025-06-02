@@ -21,10 +21,10 @@
 
 
 #ifdef LCD_USING_ED_LB5XSPI18501
-    #define CST816_UPDATA_ENABLE            /* ʹ������ */
+    #define CST816_UPDATA_ENABLE            /* 使锟斤拷锟斤拷锟斤拷 */
 #endif /* LCD_USING_ED_LB5XSPI18501 */
 
-#define TOUCH_SLAVE_ADDRESS             (0x15)  /* ������ַ */
+#define TOUCH_SLAVE_ADDRESS             (0x15)  /* 锟斤拷锟斤拷锟斤拷址 */
 
 #define TOUCH_CHIP_ID_CST716            (0x20)
 #define TOUCH_CHIP_ID_CST816T           (0xB5)
@@ -33,9 +33,9 @@
 
 /*register address*/
 #define FTS_REG_CHIP_ID                 0xA7       /* ID */
-#define FTS_REG_MODE_DEEP_SLEEP         0xD105     /* sleepģʽ */
-#define FTS_REG_MODE_NORMOL             0xD109     /* ��������ģʽ */
-#define FTS_REG_GET_POSI                0xD000     /* ��ȡ�����λ��?*/
+#define FTS_REG_MODE_DEEP_SLEEP         0xD105     /* sleep模式 */
+#define FTS_REG_MODE_NORMOL             0xD109     /* 锟斤拷锟斤拷锟斤拷锟斤拷模式 */
+#define FTS_REG_GET_POSI                0xD000     /* 锟斤拷取锟斤拷锟斤拷锟轿伙拷锟?*/
 
 
 
@@ -54,7 +54,7 @@
         /* Using PSRAM buffer */
         ALIGN(__SCB_DCACHE_LINE_SIZE)
         L2_NON_RET_BSS_SECT_BEGIN(rbuf)
-        static uint8_t rbuf[__SCB_DCACHE_LINE_SIZE * 1];
+        L2_NON_RET_BSS_SECT(rbuf, static uint8_t rbuf[__SCB_DCACHE_LINE_SIZE * 1]);
         L2_NON_RET_BSS_SECT_END
 
     #else
