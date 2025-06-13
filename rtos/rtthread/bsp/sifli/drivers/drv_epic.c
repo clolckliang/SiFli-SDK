@@ -2093,7 +2093,7 @@ static void print_operation(const char *name, const drv_epic_operation *op)
     {
         LOG_E(FORMATED_LAYER_INFO(&op->desc.blend.layer, "FG"));
         LOG_E(FORMATED_LAYER_EXTRA_INFO(&op->desc.blend.layer));
-        if (0 == op->desc.blend.use_dest_as_bg)
+        if (EPIC_BLEND_MODE_FIXED_BG == op->desc.blend.use_dest_as_bg)
         {
             LOG_E("BG rgb:%d,%d,%d",
                   op->desc.blend.r,
@@ -2802,8 +2802,116 @@ static HAL_StatusTypeDef Call_Hal_Api(HAL_API_TypeDef api, void *p1, void *p2, v
 }
 
 
-
+//Fill the area without blending with 'dst' layer always
 static void draw_fill(EPIC_LayerConfigTypeDef *dst, EPIC_LayerConfigTypeDef *p_mask_layer,
+                      const EPIC_AreaTypeDef *p_fill_area, uint32_t argb8888)
+{
+    HAL_StatusTypeDef ret;
+    EPIC_LayerConfigTypeDef output_layer;
+    EPIC_AreaTypeDef com_area;
+    uint8_t output_has_alpha = (EPIC_OUTPUT_ARGB8565 == dst->color_mode)
+                               || (EPIC_OUTPUT_ARGB8888 == dst->color_mode);
+
+    uint8_t opa = (uint8_t)((argb8888 >> 24) & 0xFF);
+
+
+    if (!_layer_IntersectArea(dst, p_fill_area, &com_area))
+        return;
+
+    if (NULL == p_mask_layer->data) p_mask_layer = NULL; //Disable mask layer if no data
+
+    //Clip output_layer
+    memcpy(&output_layer, dst, sizeof(EPIC_LayerConfigTypeDef));
+    _clip_layer(&output_layer, &com_area);
+
+    {
+        output_layer.color_r = (uint8_t)((argb8888 >> 16) & 0xFF);
+        output_layer.color_g = (uint8_t)((argb8888 >> 8) & 0xFF);
+        output_layer.color_b = (uint8_t)((argb8888 >> 0) & 0xFF);
+
+        if (p_mask_layer)
+        {
+            EPIC_LayerConfigTypeDef input_layers[2];
+
+            memcpy(&input_layers[1], p_mask_layer, sizeof(EPIC_LayerConfigTypeDef));
+
+            input_layers[0] = output_layer;
+            input_layers[0].data = (uint8_t *) mono_layer_addr;
+            input_layers[0].color_mode = EPIC_INPUT_MONO;
+            input_layers[0].alpha = opa;
+            input_layers[0].ax_mode = ALPHA_BLEND_RGBCOLOR;
+            input_layers[0].color_en = true;
+
+
+            ret =  Call_Hal_Api(HAL_API_BLEND_EX, input_layers, (void *)((uint32_t)2), &output_layer);
+        }
+#ifndef SF32LB55X
+        else if (opa != 255)
+        {
+            EPIC_LayerConfigTypeDef input_layers[1];
+
+            input_layers[0] = output_layer;
+            input_layers[0].data = (uint8_t *) mono_layer_addr;
+            input_layers[0].color_mode = EPIC_INPUT_MONO;
+            input_layers[0].alpha = opa;
+            input_layers[0].ax_mode = ALPHA_BLEND_RGBCOLOR;
+            input_layers[0].color_en = true;
+
+            ret =  Call_Hal_Api(HAL_API_BLEND_EX, input_layers, (void *)((uint32_t)1), &output_layer);
+        }
+#else /* !SF32LB55X */
+        else if (opa != 255)
+        {
+            if (output_has_alpha)
+            {
+                RT_ASSERT(0 == argb8888);//Only support fill with 0x00000000 on SF32LB55X
+
+                uint32_t dst_color_bytes = HAL_EPIC_GetColorDepth(dst->color_mode) >> 3;
+                uint32_t dst_layer_stride = dst->total_width * dst_color_bytes;
+
+                uint16_t output_new_width = output_layer.width * dst_color_bytes / 2;
+
+                //Software fills the bytes that are not 2-bytes aligned
+                if (0 != output_layer.width - output_new_width)
+                {
+                    for (uint32_t y = 0; y < output_layer.height; y++)
+                    {
+                        uint8_t *p_dst = output_layer.data + y * dst_layer_stride + output_new_width * 2;
+                        *p_dst = 0x00;
+                    }
+                }
+
+
+                //EPIC fills the bytes that are 2 bytes aligned
+                output_layer.color_mode = EPIC_OUTPUT_RGB565;
+                output_layer.total_width = dst_layer_stride / 2;
+                output_layer.width = output_new_width;
+
+                output_layer.color_en = true;
+                ret =  Call_Hal_Api(HAL_API_BLEND_EX, NULL, (void *)0, &output_layer);
+            }
+            else
+            {
+                EPIC_LayerConfigTypeDef input_layer = output_layer;
+
+                input_layer.alpha = (0 == opa) ? 255 : (256 - opa);
+
+                output_layer.color_en = true;
+                ret =  Call_Hal_Api(HAL_API_BLEND_EX, &input_layer, (void *)1, &output_layer);
+            }
+        }
+#endif /*SF32LB55X */
+        else
+        {
+            output_layer.color_en = true;
+            ret =  Call_Hal_Api(HAL_API_BLEND_EX, NULL, (void *)0, &output_layer);
+        }
+        DRV_EPIC_ASSERT(HAL_OK == ret);
+
+    }
+}
+
+static void draw_rect(EPIC_LayerConfigTypeDef *dst, EPIC_LayerConfigTypeDef *p_mask_layer,
                       const EPIC_AreaTypeDef *p_fill_area, uint32_t argb8888)
 {
     HAL_StatusTypeDef ret;
@@ -2883,13 +2991,13 @@ static void draw_fill(EPIC_LayerConfigTypeDef *dst, EPIC_LayerConfigTypeDef *p_m
     }
 }
 
-static inline void draw_fill2(EPIC_LayerConfigTypeDef *dst, const EPIC_AreaTypeDef *p_clip_area,
+static inline void draw_rect2(EPIC_LayerConfigTypeDef *dst, const EPIC_AreaTypeDef *p_clip_area,
                               EPIC_LayerConfigTypeDef *p_mask_layer,
                               const EPIC_AreaTypeDef *p_fill_area, uint32_t argb8888)
 {
     EPIC_AreaTypeDef com_area;
     if (HAL_EPIC_AreaIntersect(&com_area, p_fill_area, p_clip_area))
-        draw_fill(dst, p_mask_layer, &com_area, argb8888);
+        draw_rect(dst, p_mask_layer, &com_area, argb8888);
 }
 
 static rt_err_t draw_masked_rect(EPIC_LayerConfigTypeDef *dst, EPIC_LayerConfigTypeDef *p_mask_layer,
@@ -3260,7 +3368,7 @@ static rt_err_t render_rectangle(drv_epic_operation *p_operation, EPIC_LayerConf
 
     if (rout <= 0)
     {
-        draw_fill(dst, &p_operation->mask, &draw_area, color);
+        draw_rect(dst, &p_operation->mask, &draw_area, color);
     }
     else
     {
@@ -3297,7 +3405,7 @@ static rt_err_t render_rectangle(drv_epic_operation *p_operation, EPIC_LayerConf
             //Draw NONE round rect area
             fill_area.y0 = p_rect_area->y0 + rout + 1;
             fill_area.y1 = p_rect_area->y1;
-            draw_fill2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
+            draw_rect2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
 
         }
         else if (!top_fillet && bot_fillet)
@@ -3314,7 +3422,7 @@ static rt_err_t render_rectangle(drv_epic_operation *p_operation, EPIC_LayerConf
             //Draw NONE round rect area
             fill_area.y0 = p_rect_area->y0;
             fill_area.y1 = p_rect_area->y1 - rout - 1;
-            draw_fill2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
+            draw_rect2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
         }
         else if (2 == split)
         {
@@ -3339,7 +3447,7 @@ static rt_err_t render_rectangle(drv_epic_operation *p_operation, EPIC_LayerConf
             //Draw NONE round rect area
             fill_area.y0 = p_rect_area->y0 + rout + 1;
             fill_area.y1 = p_rect_area->y1 - rout - 1;
-            draw_fill2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
+            draw_rect2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
         }
         else if (1 == split)
         {
@@ -3368,7 +3476,7 @@ static rt_err_t render_rectangle(drv_epic_operation *p_operation, EPIC_LayerConf
             //Draw NONE round rect area
             fill_area.x0 = p_rect_area->x0 + rout;
             fill_area.x1 = p_rect_area->x1 - rout;
-            draw_fill2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
+            draw_rect2(dst, p_clip_area, &p_operation->mask, &fill_area, color);
         }
         else
         {
@@ -3430,7 +3538,7 @@ static rt_err_t render_border_complex(drv_epic_operation *p_operation, EPIC_Laye
         blend_area.x1 = core_area.x1;
         blend_area.y0 = outer_area->y0;
         blend_area.y1 = inner_area->y0 - 1;
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
     }
 
     if (bottom_side && split_hor)
@@ -3439,7 +3547,7 @@ static rt_err_t render_border_complex(drv_epic_operation *p_operation, EPIC_Laye
         blend_area.x1 = core_area.x1;
         blend_area.y0 = inner_area->y1 + 1;
         blend_area.y1 = outer_area->y1;
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
     }
 
     /*If the border is very thick and the vertical sides overlap horizontally draw a single rectangle*/
@@ -3449,7 +3557,7 @@ static rt_err_t render_border_complex(drv_epic_operation *p_operation, EPIC_Laye
         blend_area.x1 = outer_area->x1;
         blend_area.y0 = core_area.y0;
         blend_area.y1 = core_area.y1;
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
     }
     else
     {
@@ -3459,7 +3567,7 @@ static rt_err_t render_border_complex(drv_epic_operation *p_operation, EPIC_Laye
             blend_area.x1 = inner_area->x0 - 1;
             blend_area.y0 = core_area.y0;
             blend_area.y1 = core_area.y1;
-            draw_fill2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
+            draw_rect2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
         }
 
         if (right_side)
@@ -3468,7 +3576,7 @@ static rt_err_t render_border_complex(drv_epic_operation *p_operation, EPIC_Laye
             blend_area.x1 = outer_area->x1;
             blend_area.y0 = core_area.y0;
             blend_area.y1 = core_area.y1;
-            draw_fill2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
+            draw_rect2(dst, p_clip_area, &p_operation->mask, &blend_area, argb8888);
         }
     }
 
@@ -3590,7 +3698,7 @@ static rt_err_t render_border_simple(drv_epic_operation *p_operation, EPIC_Layer
     a.y1 = inner_area->y0 - 1;
     if (top_side)
     {
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
     }
 
     /*Bottom*/
@@ -3598,7 +3706,7 @@ static rt_err_t render_border_simple(drv_epic_operation *p_operation, EPIC_Layer
     a.y1 = outer_area->y1;
     if (bottom_side)
     {
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
     }
 
     /*Left*/
@@ -3608,7 +3716,7 @@ static rt_err_t render_border_simple(drv_epic_operation *p_operation, EPIC_Layer
     a.y1 = (bottom_side) ? inner_area->y1 : outer_area->y1;
     if (left_side)
     {
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
     }
 
     /*Right*/
@@ -3616,7 +3724,7 @@ static rt_err_t render_border_simple(drv_epic_operation *p_operation, EPIC_Layer
     a.x1 = outer_area->x1;
     if (right_side)
     {
-        draw_fill2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
+        draw_rect2(dst, p_clip_area, &p_operation->mask, &a, argb8888);
     }
 
     return RT_EOK;
@@ -3685,7 +3793,7 @@ static rt_err_t render_line_hor(drv_epic_operation *p_operation, EPIC_LayerConfi
     /*If there is no mask then simply draw a rectangle*/
     if (!dashed)
     {
-        draw_fill(dst, &p_operation->mask, &blend_area, p_operation->desc.line.argb8888);
+        draw_rect(dst, &p_operation->mask, &blend_area, p_operation->desc.line.argb8888);
     }
     else
     {
@@ -3715,7 +3823,7 @@ static rt_err_t render_line_ver(drv_epic_operation *p_operation, EPIC_LayerConfi
     /*If there is no mask then simply draw a rectangle*/
     if (!dashed)
     {
-        draw_fill(dst, &p_operation->mask, &blend_area, p_operation->desc.line.argb8888);
+        draw_rect(dst, &p_operation->mask, &blend_area, p_operation->desc.line.argb8888);
     }
     else
     {
@@ -3999,9 +4107,6 @@ static void render_image(drv_epic_operation *p_operation, EPIC_LayerConfigTypeDe
 {
     HAL_StatusTypeDef ret;
     EPIC_LayerConfigTypeDef output_layer;
-    uint32_t mask_addr = 0;
-    uint32_t fg_addr = 0;
-    uint32_t bg_addr = 0;
 
 
     //Clip output_layer
@@ -4016,11 +4121,9 @@ static void render_image(drv_epic_operation *p_operation, EPIC_LayerConfigTypeDe
 
         memcpy(&input_layers[0], dst, sizeof(EPIC_LayerConfigTypeDef));
         memcpy(&input_layers[1], &p_operation->desc.blend.layer, sizeof(EPIC_LayerConfigTypeDef));
-        fg_addr = (uint32_t) p_operation->desc.blend.layer.data;
         if (p_operation->mask.data)
         {
             memcpy(&input_layers[2], &p_operation->mask, sizeof(EPIC_LayerConfigTypeDef));
-            mask_addr = (uint32_t) p_operation->mask.data;
             input_layer_cnt++;
         }
 
@@ -4029,16 +4132,16 @@ static void render_image(drv_epic_operation *p_operation, EPIC_LayerConfigTypeDe
         if (p_operation->desc.blend.layer.transform_cfg.type != 0)
         {
             api = HAL_API_TRANSFORM;
-            RT_ASSERT((1 == p_operation->desc.blend.use_dest_as_bg));
+            RT_ASSERT((EPIC_BLEND_MODE_NORMAL == p_operation->desc.blend.use_dest_as_bg));
         }
         else
         {
             api = HAL_API_BLEND_EX;
         }
 
-        if (0 == p_operation->desc.blend.use_dest_as_bg)
+        if (EPIC_BLEND_MODE_NORMAL != p_operation->desc.blend.use_dest_as_bg)
         {
-            output_layer.color_en = true;
+            output_layer.color_en = (EPIC_BLEND_MODE_FIXED_BG == p_operation->desc.blend.use_dest_as_bg);
             output_layer.color_r  = p_operation->desc.blend.r;
             output_layer.color_g  = p_operation->desc.blend.g;
             output_layer.color_b  = p_operation->desc.blend.b;
@@ -4460,88 +4563,118 @@ static void epic_task(void *param)
 
             if (rl->flag & rl_flag_rendering)
             {
-                EPIC_LayerConfigTypeDef final_layer;
-                EPIC_AreaTypeDef *p_final_area = &p_Render2Buf->dst_area;
-
-
-                memcpy(&final_layer, &rl->dst, sizeof(EPIC_LayerConfigTypeDef));
-                /*Restore real size of final layer according 'dst_area'*/
-                final_layer.x_offset = p_final_area->x0;
-                final_layer.y_offset = p_final_area->y0;
-                final_layer.width = HAL_EPIC_AreaWidth(p_final_area);
-                final_layer.height = HAL_EPIC_AreaHeight(p_final_area);
-                final_layer.total_width = final_layer.width;
-
-
-
-                //Setup dst layer according to 'p_drv_epic->buf1&2'
                 EPIC_LayerConfigTypeDef *p_dst = &rl->dst;
                 EPIC_AreaTypeDef invalid_area;
                 _get_layer_area(&invalid_area, &rl->dst);
-                uint32_t color_bytes = HAL_EPIC_GetColorDepth(p_dst->color_mode) >> 3;
-                p_dst->width = HAL_EPIC_AreaWidth(&invalid_area);
-                p_dst->total_width = p_dst->width;
-                uint32_t max_buf = MIN(drv_epic.dbg_render_buf_max, p_drv_epic->buf_bytes);
-                uint32_t max_row = (uint32_t)(max_buf / color_bytes) / p_dst->total_width;
-                DRV_EPIC_ASSERT(max_row > 0);
-                p_dst->height = max_row;
-                p_dst->data_size = color_bytes * p_dst->total_width * p_dst->height;
-                p_dst->data = (uint8_t *)p_drv_epic->cur_buf;
 
-                //setup scaling
+                //Get scaling values
                 uint32_t scale_x, scale_y;
-                if (0 != memcmp(&invalid_area, p_final_area, sizeof(EPIC_AreaTypeDef)))
-                {
-                    scale_x = EPIC_INPUT_SCALE_NONE * HAL_EPIC_AreaWidth(&invalid_area) / HAL_EPIC_AreaWidth(p_final_area);
-                    scale_y = EPIC_INPUT_SCALE_NONE * HAL_EPIC_AreaHeight(&invalid_area) / HAL_EPIC_AreaHeight(p_final_area);
-                }
-                else
-                {
-                    scale_x = EPIC_INPUT_SCALE_NONE;
-                    scale_y = EPIC_INPUT_SCALE_NONE;
-                }
+                scale_x = EPIC_INPUT_SCALE_NONE * p_dst->width / HAL_EPIC_AreaWidth(&p_Render2Buf->dst_area);
+                scale_y = EPIC_INPUT_SCALE_NONE * p_dst->height / HAL_EPIC_AreaHeight(&p_Render2Buf->dst_area);
 
-                //Setup draw image operation
-                drv_epic_operation draw_img_op;
-                draw_img_op.op = DRV_EPIC_DRAW_IMAGE;
-                draw_img_op.clip_area = *p_final_area;
-                HAL_EPIC_LayerConfigInit(&draw_img_op.mask);
-                draw_img_op.desc.blend.layer = *p_dst;
-                draw_img_op.desc.blend.layer.transform_cfg.pivot_x = final_layer.x_offset - p_dst->x_offset;
-                draw_img_op.desc.blend.layer.transform_cfg.scale_x = scale_x;
-                draw_img_op.desc.blend.layer.transform_cfg.scale_y = scale_y;
-                draw_img_op.desc.blend.use_dest_as_bg = true;
 
                 render_start();
 
-                for (int16_t start_row = invalid_area.y0; start_row <= invalid_area.y1;)
+                /*
+                    If the scaling is required, we need render the image to the 'p_drv_epic->buf1&2' buffer first,
+                    then scale the image to the rl->dst layer,
+                    else if the scaling is not required, we can render the image directly to the rl->dst layer.
+                */
+                if ((EPIC_INPUT_SCALE_NONE != scale_x) || (EPIC_INPUT_SCALE_NONE != scale_y))
                 {
-                    p_dst->y_offset = start_row;
-                    uint32_t last;
-                    if (start_row + p_dst->height - 1 >= invalid_area.y1)
-                    {
-                        p_dst->height = invalid_area.y1 - start_row + 1;
-                        last = 1;
-                    }
-                    else
-                    {
-                        last = 0;
-                    }
+                    EPIC_LayerConfigTypeDef final_layer;
+                    EPIC_AreaTypeDef *p_final_area = &p_Render2Buf->dst_area;
 
-                    if (RT_EOK == render_list(rl))
-                    {
-                        //Update the changes from p_dst
-                        draw_img_op.desc.blend.layer.data = p_dst->data;
-                        draw_img_op.desc.blend.layer.y_offset = p_dst->y_offset;
-                        draw_img_op.desc.blend.layer.height  = p_dst->height;
-                        draw_img_op.desc.blend.layer.transform_cfg.pivot_y = final_layer.y_offset - p_dst->y_offset;
+                    //1.Save original dst layer info to final_layer
+                    memcpy(&final_layer, &rl->dst, sizeof(EPIC_LayerConfigTypeDef));
+                    /*
+                        Restore real size of final layer from 'p_Render2Buf->dst_area',
+                        the rl->dst layer's size is the invalid_area of rl.
+                    */
+                    final_layer.x_offset = p_final_area->x0;
+                    final_layer.y_offset = p_final_area->y0;
+                    final_layer.width = HAL_EPIC_AreaWidth(p_final_area);
+                    final_layer.height = HAL_EPIC_AreaHeight(p_final_area);
+                    final_layer.total_width = final_layer.width;
 
-                        render_layer(&draw_img_op, &final_layer, p_final_area);
+                    //2. Replace dst layer with 'p_drv_epic->buf1&2'
+                    uint32_t color_bytes = HAL_EPIC_GetColorDepth(p_dst->color_mode) >> 3;
+                    p_dst->width = HAL_EPIC_AreaWidth(&invalid_area);
+                    p_dst->total_width = p_dst->width;
+                    uint32_t max_buf = MIN(drv_epic.dbg_render_buf_max, p_drv_epic->buf_bytes);
+                    uint32_t max_row = (uint32_t)(max_buf / color_bytes) / p_dst->total_width;
+                    DRV_EPIC_ASSERT(max_row > 0);
+                    p_dst->height = max_row;
+                    p_dst->data_size = color_bytes * p_dst->total_width * p_dst->height;
+                    p_dst->data = (uint8_t *)p_drv_epic->cur_buf;
+
+
+                    //Setup scaling image operation
+                    drv_epic_operation draw_img_op;
+                    draw_img_op.op = DRV_EPIC_DRAW_IMAGE;
+                    draw_img_op.clip_area = *p_final_area;
+                    HAL_EPIC_LayerConfigInit(&draw_img_op.mask);
+                    draw_img_op.desc.blend.layer = *p_dst;
+                    draw_img_op.desc.blend.layer.transform_cfg.pivot_x = final_layer.x_offset - p_dst->x_offset;
+                    draw_img_op.desc.blend.layer.transform_cfg.scale_x = scale_x;
+                    draw_img_op.desc.blend.layer.transform_cfg.scale_y = scale_y;
+                    draw_img_op.desc.blend.use_dest_as_bg = EPIC_BLEND_MODE_OVERWRITE;
+
+                    EPIC_AreaTypeDef final_layer_clip_area;
+                    //The maximum copied rows per time
+                    uint32_t final_layer_max_row = max_row * EPIC_INPUT_SCALE_NONE / scale_y;
+                    final_layer_clip_area.x0 = p_final_area->x0;
+                    final_layer_clip_area.x1 = p_final_area->x1;
+
+                    //3. Render the image one by one
+                    for (int16_t start_row = p_final_area->y0; start_row <= p_final_area->y1; start_row += final_layer_max_row)
+                    {
+                        uint32_t last;
+                        final_layer_clip_area.y0 = start_row;
+                        if (start_row + final_layer_max_row - 1 >= p_final_area->y1)
+                        {
+                            final_layer_clip_area.y1 = p_final_area->y1;
+                            last = 1;
+                        }
+                        else
+                        {
+                            final_layer_clip_area.y1 = start_row + final_layer_max_row - 1;
+                            last = 0;
+                        }
+
+                        p_dst->y_offset = start_row * scale_y / EPIC_INPUT_SCALE_NONE;
+
+                        if (p_dst->y_offset + p_dst->height - 1 >= invalid_area.y1)
+                        {
+                            p_dst->height = invalid_area.y1 - p_dst->y_offset + 1;
+                        }
+                        else
+                        {
+                            ; //Keep the height as max_row
+                        }
+
+                        if (RT_EOK == render_list(rl))
+                        {
+                            //Update the changes from p_dst
+                            draw_img_op.desc.blend.layer.data = p_dst->data;
+                            draw_img_op.desc.blend.layer.y_offset = p_dst->y_offset;
+                            draw_img_op.desc.blend.layer.height  = p_dst->height;
+                            draw_img_op.desc.blend.layer.transform_cfg.pivot_y = final_layer.y_offset - p_dst->y_offset;
+
+                            render_layer(&draw_img_op, &final_layer, &final_layer_clip_area);
+                        }
+                        else
+                        {
+                            ;//Ignore EMPTY rendering
+                        }
 
                         if (last && p_Render2Buf->done_cb)
                         {
+                            rt_err_t ret_v = drv_gpu_check_done(GPU_BLEND_EXP_MS);
+                            DRV_EPIC_ASSERT(RT_EOK == ret_v);
+
                             uint32_t usr_cb_start_ms = rt_tick_get_millisecond();
-                            p_Render2Buf->done_cb(rl, p_dst, p_Render2Buf->usr_data, last);
+                            p_Render2Buf->done_cb(rl, &final_layer, p_Render2Buf->usr_data, last);
                             p_drv_epic->rd_usr_cb_total += rt_tick_get_millisecond() - usr_cb_start_ms;
                         }
 
@@ -4553,10 +4686,30 @@ static void epic_task(void *param)
                         p_dst->data = p_drv_epic->cur_buf;
                     }
 
-                    if (scale_x != EPIC_INPUT_SCALE_NONE || scale_y != EPIC_INPUT_SCALE_NONE)
-                        start_row += max_row - (1 + (scale_y >> EPIC_INPUT_SCALE_FRAC_SIZE));
+                }
+                else
+                {
+                    if (RT_EOK == render_list(rl))
+                    {
+                        //Notify the continue blend operations stop now
+                        HAL_StatusTypeDef ret =  Call_Hal_Api(HAL_API_CONT_BLEND_STOP, NULL, NULL, NULL);
+                        DRV_EPIC_ASSERT(HAL_OK == ret);
+
+                    }
                     else
-                        start_row += max_row;
+                    {
+                        ;//Ignore EMPTY rendering
+                    }
+
+                    if (p_Render2Buf->done_cb)
+                    {
+                        rt_err_t ret_v = drv_gpu_check_done(GPU_BLEND_EXP_MS);
+                        DRV_EPIC_ASSERT(RT_EOK == ret_v);
+
+                        uint32_t usr_cb_start_ms = rt_tick_get_millisecond();
+                        p_Render2Buf->done_cb(rl, p_dst, p_Render2Buf->usr_data, 1);
+                        p_drv_epic->rd_usr_cb_total += rt_tick_get_millisecond() - usr_cb_start_ms;
+                    }
                 }
 
                 destroy_render_list(rl);
@@ -4773,7 +4926,7 @@ drv_epic_render_list_t drv_epic_alloc_render_list(drv_epic_render_buf *p_buf, EP
         rl_ret->dst.x_offset    = p_buf->area.x0;
         rl_ret->dst.y_offset    = p_buf->area.y0;
 
-        HAL_EPIC_AreaCopy(p_ow_area, &rl_ret->commit_area);
+        if (p_ow_area) HAL_EPIC_AreaCopy(p_ow_area, &rl_ret->commit_area);
     }
 
     drv_epic.using_rl = rl_ret;
@@ -4937,7 +5090,7 @@ rt_err_t drv_epic_commit_op(drv_epic_operation *op)
             drv_epic_operation *curr_op = op;
 
             if ((DRV_EPIC_DRAW_FILL == prev_op->op) && (prev_op->desc.fill.opa >= OPA_MAX) && (NULL == prev_op->mask.data)
-                    && (DRV_EPIC_DRAW_IMAGE == op->op) && (0 == op->desc.blend.use_dest_as_bg)
+                    && (DRV_EPIC_DRAW_IMAGE == op->op) && (EPIC_BLEND_MODE_FIXED_BG == op->desc.blend.use_dest_as_bg)
                     && (0 == op->desc.blend.layer.transform_cfg.angle) && (0 == op->desc.blend.layer.transform_cfg.type)
                     && (EPIC_INPUT_SCALE_NONE == op->desc.blend.layer.transform_cfg.scale_x)
                     && (EPIC_INPUT_SCALE_NONE == op->desc.blend.layer.transform_cfg.scale_y)
@@ -4952,7 +5105,7 @@ rt_err_t drv_epic_commit_op(drv_epic_operation *op)
                 /*    if (HAL_EPIC_AreaIsIn(&prev_area, &op->clip_area))
                     {
                         //Merge filling&blending operations to one
-                        op->desc.blend.use_dest_as_bg = 0;
+                        op->desc.blend.use_dest_as_bg = EPIC_BLEND_MODE_FIXED_BG;
                         op->desc.blend.r = prev_op->desc.fill.r;
                         op->desc.blend.g = prev_op->desc.fill.g;
                         op->desc.blend.b = prev_op->desc.fill.b;
@@ -4965,7 +5118,7 @@ rt_err_t drv_epic_commit_op(drv_epic_operation *op)
                 if (HAL_EPIC_AreaIsIn(&op->clip_area, &prev_area))
                 {
                     //Merge filling&blending operations to one
-                    op->desc.blend.use_dest_as_bg = 0;
+                    op->desc.blend.use_dest_as_bg = EPIC_BLEND_MODE_FIXED_BG;
                     op->desc.blend.r = prev_op->desc.fill.r;
                     op->desc.blend.g = prev_op->desc.fill.g;
                     op->desc.blend.b = prev_op->desc.fill.b;
@@ -5140,7 +5293,7 @@ static rt_err_t drv_epic_render_list_init(void)
 
     return RT_EOK;
 }
-#endif
+#endif /*DRV_EPIC_NEW_API*/
 
 int drv_epic_init(void)
 {
@@ -5196,7 +5349,18 @@ static rt_err_t drv_epic_cfg(int argc, char **argv)
     if (argc < 2)
     {
         LOG_I("drv_epic_cfg [OPTION] [VALUE]");
-        LOG_I("    OPTION: break, ramIns, MergeOp");
+        LOG_I("  [OPTION]:");
+#ifdef DRV_EPIC_NEW_API
+        LOG_I("    break: set the source address for break point.");
+        LOG_I("    ramIns: disable the ram instance, 0: enable, 1: disable.");
+        LOG_I("    MergeOp: disable the merge operations, 0: enable, 1: disable.");
+        LOG_I("    DisOp: disable the operations, 0: enable, 1: disable.");
+        LOG_I("    printRl: print the render list, 0: disable, 1: enable.");
+        LOG_I("    printDetail: print the detail of rendering, 0: disable, 1: enable.");
+        LOG_I("    printSts: print the statistics of rendering, 0: disable, 1: enable.");
+        LOG_I("    mask_max: set the max size of mask buffer pool, default is %d.", drv_epic.dbg_mask_buf_pool_max);
+        LOG_I("    render_buf_max: set the max size of render buffer, default is %d.", drv_epic.dbg_render_buf_max);
+#endif /* DRV_EPIC_NEW_API */
         return RT_EOK;
     }
 

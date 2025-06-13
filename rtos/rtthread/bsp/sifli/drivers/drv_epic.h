@@ -134,6 +134,12 @@ typedef struct
     EPIC_AreaTypeDef area;
 } drv_epic_letter_type_t;
 
+typedef enum
+{
+    EPIC_BLEND_MODE_FIXED_BG = 0,       //Fixed background color, no blending with destination buffer
+    EPIC_BLEND_MODE_NORMAL  = 1,        //Normal mode, blending with destination buffer
+    EPIC_BLEND_MODE_OVERWRITE  = 2,       //Overwrite mode, no background
+} drv_epic_blend_mode_type_t;
 
 typedef struct
 {
@@ -146,7 +152,7 @@ typedef struct
         struct
         {
             EPIC_LayerConfigTypeDef layer;
-            uint8_t use_dest_as_bg;
+            uint8_t use_dest_as_bg; // See drv_epic_blend_mode_type_t
             uint8_t r;
             uint8_t g;
             uint8_t b;

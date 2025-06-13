@@ -71,8 +71,12 @@
 
 ALIGN(64) static uint8_t render_buffer[SLOW_SPEED_SRAM + BUF_TOTAL_BYTES * 2];
 
+#define TEST_IMAGE_COLOR_FORMAT EPIC_INPUT_ARGB8565
+#define TEST_IMAGE_PIXEL_BYTES 3
+#define TEST_IMAGE_WIDTH  (LCD_HOR_RES_MAX*8/10)
+#define TEST_IMAGE_HEIGHT (LCD_VER_RES_MAX*8/10)
 L2_NON_RET_BSS_SECT_BEGIN(test_images)
-L2_NON_RET_BSS_SECT(test_images, ALIGN(64) static uint8_t test_image[LCD_HOR_RES_MAX * LCD_VER_RES_MAX * BUF_PIXEL_BYTES]);
+L2_NON_RET_BSS_SECT(test_images, ALIGN(64) static uint8_t test_image[TEST_IMAGE_WIDTH * TEST_IMAGE_HEIGHT * TEST_IMAGE_PIXEL_BYTES]);
 L2_NON_RET_BSS_SECT_END
 void dummy_func(void)
 {
@@ -178,6 +182,14 @@ static void partial_done_cb(drv_epic_render_list_t rl, EPIC_LayerConfigTypeDef *
     lcd_flush(p_lcd_device, p_dst);
 }
 
+static void fill_done_cb(drv_epic_render_list_t rl, EPIC_LayerConfigTypeDef *p_dst, void *usr_data, uint32_t last)
+{
+    if (last)
+    {
+        rt_sem_release(&render_done_sema);
+    }
+}
+
 static void draw_fill(drv_epic_render_buf *p_buf)
 {
     drv_epic_operation *o = drv_epic_alloc_op(p_buf);
@@ -214,7 +226,7 @@ static void draw_img(drv_epic_render_buf *p_buf)
     o->clip_area.y1 = LCD_VER_RES_MAX - 1;
 
     HAL_EPIC_LayerConfigInit(&o->mask);
-    o->desc.blend.use_dest_as_bg = 1;
+    o->desc.blend.use_dest_as_bg = EPIC_BLEND_MODE_NORMAL;
 
     EPIC_LayerConfigTypeDef *p_src_layer = &o->desc.blend.layer;
     HAL_EPIC_LayerConfigInit(p_src_layer);
@@ -223,10 +235,10 @@ static void draw_img(drv_epic_render_buf *p_buf)
     p_src_layer->y_offset = 0;
 
     p_src_layer->data = (uint8_t *)&test_image[0];
-    p_src_layer->color_mode = EPIC_COLOR_RGB888;
-    p_src_layer->width = LCD_HOR_RES_MAX;
-    p_src_layer->total_width = LCD_HOR_RES_MAX;
-    p_src_layer->height = LCD_VER_RES_MAX;
+    p_src_layer->color_mode = TEST_IMAGE_COLOR_FORMAT;
+    p_src_layer->width = TEST_IMAGE_WIDTH;
+    p_src_layer->total_width = TEST_IMAGE_WIDTH;
+    p_src_layer->height = TEST_IMAGE_HEIGHT;
 
     drv_epic_commit_op(o);
 }
@@ -483,16 +495,16 @@ static void draw_img_3d_rotated(drv_epic_render_buf *p_buf)
     o->clip_area.y1 = LCD_VER_RES_MAX - 1;
 
     HAL_EPIC_LayerConfigInit(&o->mask);
-    o->desc.blend.use_dest_as_bg = 1;
+    o->desc.blend.use_dest_as_bg = EPIC_BLEND_MODE_NORMAL;
 
     EPIC_LayerConfigTypeDef *p_src_layer = &o->desc.blend.layer;
     HAL_EPIC_LayerConfigInit(p_src_layer);
     p_src_layer->alpha = 255;
     p_src_layer->data = (uint8_t *)&test_image[0];
-    p_src_layer->color_mode = EPIC_COLOR_RGB888;
-    p_src_layer->width = LCD_HOR_RES_MAX >> 0;
-    p_src_layer->total_width = LCD_HOR_RES_MAX >> 0;
-    p_src_layer->height = LCD_VER_RES_MAX >> 0;
+    p_src_layer->color_mode = TEST_IMAGE_COLOR_FORMAT;
+    p_src_layer->width = TEST_IMAGE_WIDTH;
+    p_src_layer->total_width = TEST_IMAGE_WIDTH;
+    p_src_layer->height = TEST_IMAGE_HEIGHT;
     //Align to the center of screen
     p_src_layer->x_offset = (LCD_HOR_RES_MAX - p_src_layer->width) >> 1;
     p_src_layer->y_offset = (LCD_VER_RES_MAX - p_src_layer->height) >> 1;
@@ -543,16 +555,16 @@ static void draw_img_3d_rotated_2(drv_epic_render_buf *p_buf)
     o->clip_area.y1 = LCD_VER_RES_MAX - 1;
 
     HAL_EPIC_LayerConfigInit(&o->mask);
-    o->desc.blend.use_dest_as_bg = 1;
+    o->desc.blend.use_dest_as_bg = EPIC_BLEND_MODE_NORMAL;
 
     EPIC_LayerConfigTypeDef *p_src_layer = &o->desc.blend.layer;
     HAL_EPIC_LayerConfigInit(p_src_layer);
     p_src_layer->alpha = 255;
     p_src_layer->data = (uint8_t *)&test_image[0];
-    p_src_layer->color_mode = EPIC_COLOR_RGB888;
-    p_src_layer->width = LCD_HOR_RES_MAX >> 1;
-    p_src_layer->total_width = LCD_HOR_RES_MAX;
-    p_src_layer->height = LCD_VER_RES_MAX >> 1;
+    p_src_layer->color_mode = TEST_IMAGE_COLOR_FORMAT;
+    p_src_layer->width = TEST_IMAGE_WIDTH >> 1;
+    p_src_layer->total_width = TEST_IMAGE_WIDTH;
+    p_src_layer->height = TEST_IMAGE_HEIGHT >> 1;
     //Align to the center of screen
     p_src_layer->x_offset = (LCD_HOR_RES_MAX - p_src_layer->width) >> 1;
     p_src_layer->y_offset = (LCD_VER_RES_MAX - p_src_layer->height) >> 1;
@@ -627,13 +639,15 @@ static void draw_arc_anim(drv_epic_render_buf *p_buf)
     }
 }
 
-static void random_grid_fill(unsigned char *buffer, int HOR_MAX, int VER_MAX)
+static void generate_image(unsigned char *buffer, uint32_t cf, int HOR_MAX, int VER_MAX)
 {
     srand(time(NULL));
+    int remaining_area = LCD_HOR_RES_MAX * LCD_VER_RES_MAX;
+#define  grid_count  16
+#define MIN_SIZE  20
 
-    int remaining_area = HOR_MAX * VER_MAX;
-    int grid_count = 64;
-    const int MIN_SIZE = 20;
+    //1. Calculate the fill areas
+    EPIC_AreaTypeDef areas[grid_count];
 
     for (int i = 0; i < grid_count; i++)
     {
@@ -659,28 +673,82 @@ static void random_grid_fill(unsigned char *buffer, int HOR_MAX, int VER_MAX)
         }
 
         // random start x,y
-        int start_x = rand() % (HOR_MAX - width + 1);
-        int start_y = rand() % (VER_MAX - height + 1);
+        int start_x = rand() % (LCD_HOR_RES_MAX - width + 1);
+        int start_y = rand() % (LCD_VER_RES_MAX - height + 1);
 
-        // random color
-        unsigned char r = rand() % 256;
-        unsigned char g = rand() % 256;
-        unsigned char b = rand() % 256;
+        //Save area and color
+        areas[i].x0 = start_x;
+        areas[i].y0 = start_y;
+        areas[i].x1 = start_x + width - 1;
+        areas[i].y1 = start_y + height - 1;
 
-        // fill grid
-        for (int y = start_y; y < start_y + height; y++)
-        {
-            for (int x = start_x; x < start_x + width; x++)
-            {
-                int index = (y * HOR_MAX + x) * 3;
-                buffer[index] = r;
-                buffer[index + 1] = g;
-                buffer[index + 2] = b;
-            }
-        }
 
         remaining_area -= area;
     }
+
+
+
+
+    //2. Fill the areas
+    drv_epic_render_buf render_buf;
+    render_buf.cf = cf;
+    render_buf.data = (uint8_t *)buffer;
+    render_buf.area.x0 = 0;
+    render_buf.area.y0 = 0;
+    render_buf.area.x1 = LCD_HOR_RES_MAX - 1;
+    render_buf.area.y1 = LCD_VER_RES_MAX - 1;
+
+    drv_epic_render_list_t rl;
+    EPIC_AreaTypeDef ow_area;
+    rl = drv_epic_alloc_render_list(&render_buf, &ow_area);
+    RT_ASSERT(rl != NULL);
+
+    /*Clear render buffer*/
+    drv_epic_operation *o = drv_epic_alloc_op(&render_buf);
+    RT_ASSERT(o != NULL);
+    o->op = DRV_EPIC_DRAW_FILL;
+    o->clip_area = render_buf.area;
+    o->desc.fill.r = 0;
+    o->desc.fill.g = 0;
+    o->desc.fill.b = 0;
+    o->desc.fill.opa = 0;
+    drv_epic_commit_op(o);
+
+    for (int i = 0; i < grid_count; i++)
+    {
+        o = drv_epic_alloc_op(&render_buf);
+        RT_ASSERT(o != NULL);
+
+        o->op = DRV_EPIC_DRAW_RECT;
+        o->clip_area.x0 = areas[i].x0;
+        o->clip_area.y0 = areas[i].y0;
+        o->clip_area.x1 = areas[i].x1;
+        o->clip_area.y1 = areas[i].y1;
+
+        o->desc.rectangle.area = o->clip_area;
+
+        o->desc.rectangle.argb8888 = 0x2F000000 | rand();
+
+        drv_epic_commit_op(o);
+    }
+
+    /*Start rendering*/
+    EPIC_MsgTypeDef msg;
+    msg.id = EPIC_MSG_RENDER_TO_BUF;
+    msg.render_list = rl;
+    msg.content.r2b.dst_area.x0 = 0;
+    msg.content.r2b.dst_area.y0 = 0;
+    msg.content.r2b.dst_area.x1 = HOR_MAX - 1;
+    msg.content.r2b.dst_area.y1 = VER_MAX - 1;
+    msg.content.r2b.usr_data = NULL;
+    msg.content.r2b.done_cb = fill_done_cb;
+
+    drv_epic_render_msg_commit(&msg);
+
+    /*Wait rendering done.*/
+    rt_err_t err;
+    err = rt_sem_take(&render_done_sema, rt_tick_from_millisecond(10000));
+    RT_ASSERT(RT_EOK == err);
 }
 
 int main(void)
@@ -696,17 +764,17 @@ int main(void)
         return 0;
     }
 
-    rt_kprintf("fillBuffer start\r\n");
-    memset(test_image, 0, sizeof(test_image));
-    random_grid_fill((uint8_t *)&test_image[0], LCD_HOR_RES_MAX, LCD_VER_RES_MAX);
-    rt_kprintf("fillBuffer done\r\n");
-
     drv_gpu_open();
     drv_epic_setup_render_buffer(
         (uint8_t *)&render_buffer[SLOW_SPEED_SRAM],
         (uint8_t *)&render_buffer[SLOW_SPEED_SRAM + BUF_TOTAL_BYTES],
         BUF_TOTAL_BYTES);
     rt_sem_init(&render_done_sema, "rd_done_sema", 0, RT_IPC_FLAG_FIFO);
+
+
+    rt_kprintf("generate_image start\r\n");
+    generate_image((uint8_t *)&test_image[0], TEST_IMAGE_COLOR_FORMAT, TEST_IMAGE_WIDTH, TEST_IMAGE_HEIGHT);
+    rt_kprintf("generate_image done\r\n");
 
     drv_epic_render_buf virtual_render_buf;
     virtual_render_buf.cf = EPIC_INPUT_RGB888;
