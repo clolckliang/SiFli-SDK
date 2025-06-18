@@ -897,6 +897,8 @@ static int sifli_adc_init(void)
         sifli_adc_obj[i].ADC_Handler.Init.avdd_v18_en = 0;
 #endif
 #endif
+
+        sifli_adc_obj[i].ADC_Handler.Init.en_slot = 1;
         if (HAL_ADC_Init(&sifli_adc_obj[i].ADC_Handler) != HAL_OK)
         {
             LOG_E("%s init failed", name_buf);
