@@ -95,6 +95,9 @@ def GCCResult(rtconfig, str):
         child = subprocess.Popen(gcc_cmd + ' -E -P ' + tmp_file_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     
     stdout, stderr = child.communicate()
+    if stderr:
+        print("Error: " + stderr.decode('gbk' if os.name == 'nt' else 'utf-8'))
+        raise RuntimeError("GCC command failed: " + gcc_cmd)
 
     if stdout != '':
         have_fdset = 0
