@@ -715,11 +715,8 @@ static rt_err_t sifli_op_adc_init(struct rt_adc_device *device)
             ADC_ChannelConfTypeDef ADC_ChanConf;
 
             /*configure all channels*/
-#ifdef SF32LB52X
-            uint8_t ch_num = 7;
-#else
             uint8_t ch_num = 8;
-#endif
+
             rt_memset(&ADC_ChanConf, 0, sizeof(ADC_ChanConf));
             HAL_ADC_Set_MultiMode(sifli_adc_handler, 1);
             for (uint8_t ch = 0; ch < ch_num; ch++)
