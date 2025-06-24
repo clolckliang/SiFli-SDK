@@ -216,8 +216,8 @@ static void BSP_PIN_Common(void)
     HAL_PIN_Set(PAD_PA29, SPI1_CS,  PIN_NOPULL, 1);
 
     // I2C2 (charger)
-    HAL_PIN_Set(PAD_PA10, I2C2_SCL, PIN_PULLUP, 1);
-    HAL_PIN_Set(PAD_PA11, I2C2_SDA, PIN_PULLUP, 1);
+    HAL_PIN_Set(PAD_PA10, I2C2_SCL, PIN_NOPULL, 1);
+    HAL_PIN_Set(PAD_PA11, I2C2_SDA, PIN_NOPULL, 1);
 
 //     HAL_PIN_Set_DS0(PAD_PA24, 1, 1);
 //     HAL_PIN_Set_DS0(PAD_PA25, 1, 1);
