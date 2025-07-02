@@ -1718,6 +1718,13 @@ __HAL_ROM_USED int HAL_QSPIEX_WRITE_PAGE(FLASH_HandleTypeDef *hflash, uint32_t a
             size = 0;
             goto exit;
         }
+
+        ret = HAL_FLASH_DMA_WAIT_DONE(hflash, 1000);
+        if (ret != HAL_OK)
+        {
+            size = 0;
+            goto exit;
+        }
 #else
 
         HAL_FLASH_ISSUE_CMD(hflash, cid, addr);
