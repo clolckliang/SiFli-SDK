@@ -1,4 +1,105 @@
-# SiFli SDK change Log v2.4
+# SiFli SDK change Log v2.4.1
+## Change log since v2.4.0
+### Bluetooth
+#### Fixed
+- ble: Fixed the error of bass profile to handle level notify.
+- bt: Fixed the parameter error in sco cfm event of HFP AG profile.
+- bt: Fixed read BT rssi always return invalid value.
+- ble: Fixed that gatt service registerred multi times if tran_service register more than one time.
+- ble: Fixed a bug that tran_client could not handle data length more than MTU.
+- bt: Fixed BT ACL is stuck if highest 8 bits of addr.lap is not NULL.
+- bt: Fixed a HFP AG profile connection collision bug.
+- bt: Fixed a bug that HID may not reconnect if disconnected due to abnormal disconnection.
+- ble: Fixed a bug that ke_malloc encountered assert due to using extra memory pool.
+
+#### Changed
+- bt: Optimize bt_connection_manager to spilit with turn key solution.
+- common: Optimize 48M calibration for product verification.
+- common: Enable secure connection in host.
+
+#### Added
+- bt: HFP AG role support multi connection.
+- bt: Added new API bt_interface_rd_extend_feature() and event BT_NOTIFY_COMMON_RD_EXT_FEATURE_RSP to get remote extended feature.
+- ble: Add new event SIBLES_ATT_ERROR_EVENT_IND to indicate gatt error.
+
+### Drivers
+#### Fixed
+- mpi: Fix DMA IRQ is not disabled after flash write
+- tim: Fix BTIM clock is not enabled
+- pmu: Fix hcpu wakeup crash on sf32lb56
+- epic: Supports drawing to ARGB buffer in render-list mode
+- epic: Fix EPIC coordinates overflow in 'HAL_EPIC_Copy_IT'
+- epic: YUV image is all black in EPIC render-list mode.
+
+#### Changed
+- touch: Not enable touch irq data service by default
+- lcd: Allow user to use the LCD modules defined within their own projects (i.e. outside sdk folder)
+- pmu: Turnoff LDO2 to ensure flash changing to 3byte address mode when boot up
+
+### Middleware
+#### Fixed
+- vglite: Fix vglite not work as semaphore create fails
+- audio: Fix 58x A1 chip no sound call issue
+
+#### Changed
+- data_service: Not enable mbox thread by default for sf32lb52
+- dfu: Change dfu image location in ftab to avoid conflict with ACPU image
+- audio: Increase PA delay to 200ms
+
+### Examples
+#### Fixed
+- `rt_device/pwm`: Fix doc title
+- `rt_device/spi_tf`: Fix crash on board sf32lb52-lchspi-ulp
+- `ble/hid`: Fix PAN reconnection fail
+- `rt_device/audprc`: Fix loopback command error in README
+- `boot_loader`: Fix ACPU code is not loaded
+
+#### Changed
+- `ble/hid`: Add PC support and support physical button
+- `get-started/hello_world`: Add simulator support
+- `get-started/hello_world`: Make finsh work
+- `multimedia/lvgl/watch`: Increase hcpu_ram_data_size for sf32lb52 related board
+- `storage/fatfs`: Update README
+
+#### Added
+- Add pingpong OTA example in `ble/central_and_peripheral_with_pingpong_ota`
+- Add SPP example in `bt/spp`
+
+### BSP
+#### Fixed
+- board: Fix lcpu console port config error of board 58-lcd_a128r32n1, 58-lcd_n16r32n1 and 58-lcd_n16r64n4
+- MMC56x3: Fix MMC56x3 failing to turn on continuous mode properly
+
+#### Changed
+- board: Optimize power consumption by updating pinmux setting of board sf32lb52-lchspi-ulp
+- board: Enable Windows simulator by default in board pc
+
+#### Added
+- board: Add ec-lb587_a2 for 587evb board using A2 chip
+
+### Tools
+#### Fixed
+- UartburnEx: Fix nor flash id error by updating UartburnEx to v1.5
+- ImgDownUart: Fix eMMC download fail
+- build: Fix keil project generation fail
+- build: Fixed an issue where you sometimes needed to run export twice.
+- build: Fix generated cppdefines.txt
+
+#### Changed
+- build: Change Keil used C++ standard to ISO C++ 2020
+- png2ezip: update ezip version to 2.3.4 to support lvgl v9
+
+### Docs
+#### Fixed:
+- example: Fix some example doc missing
+
+#### Added
+- Add coding-style
+- Add contribution guide
+- Add feedback submission functionality
+
+## Change log since v2.3
+
 ## Major Changes
 - Update toolchain to support Linux and macOS. Legacy env tool (upgraded to v1.1.2) could still be used on Windows. But it's recommended to use native terminal tool (i.e. PowerShell for Windows) instead of env for development on Windows. Please refer to [install guide](https://docs.sifli.com/projects/sdk/v2.4/sf32lb52x/quickstart/install/script/index.html). New terminal toolchain doesn't support SDK version `<v2.4`. Windows env tool could support all SDK versions.
 - Upgrade GCC to GCC 14. Windows env tool contains both GCC 8 and GCC 14. GCC 8 is used by SDK version `<v2.4`. GCC 14 is used by SDK version `>=v2.4`.
@@ -6,8 +107,6 @@
 - `middleware/bluetooth` is integrated as submodule. Downloaded zip file doesn't contain the complete code anymore
 - Support SF32LB58 A2 chip. SF32LB58 EVB board is configured with A1 chip. SF32LB58-LCD board is configured with A2 chip.
 
-
-## Change log since v2.3
 ### Bluetooth
 #### Fixed
 - bt: Fix sf32lb58 BT sniff disconnect issue
