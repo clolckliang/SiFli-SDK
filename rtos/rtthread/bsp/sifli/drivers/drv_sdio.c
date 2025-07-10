@@ -622,7 +622,7 @@ static void rthw_sdio_send_command(struct rthw_sdio *sdio, struct sdio_pkg *pkg)
             dma_res = HAL_DMA_PollForTransfer(&sdio_obj.dma.handle_tx, HAL_DMA_FULL_TRANSFER, 1000);
         else if (data->flags & DATA_DIR_READ)
             dma_res = HAL_DMA_PollForTransfer(&sdio_obj.dma.handle_rx, HAL_DMA_FULL_TRANSFER, 1000);
-        if (HAL_OK != dma_res) LOG_D("sdio !!! dma_res error %d\n", dma_res);
+        RT_ASSERT(dma_res == HAL_OK);
 #endif
         //LOG_D("after data: 0x%08x\n",HAL_SDMMC_GET_STA(hw_sdio));
         while (count && (HAL_SDMMC_GET_STA(hw_sdio) & (HW_SDIO_IT_TXACT)))
