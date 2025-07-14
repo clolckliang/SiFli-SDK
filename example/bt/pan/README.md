@@ -13,6 +13,30 @@
 <!-- 例程简介 -->
 本例程演示通过蓝牙连接手机的PAN协议后，通过Finsh命令从特定网站获取当前天气。
 
+##  添加 CA 证书
+1. 存放签名机构根证书
+- `external/mbedtls/certs/default` 目录中存储着常用的 CA 证书文件
+- `certs` 目录下存储着用户增加的 CA 证书文件
+
+如果 `certs/default` 目录下没有包含用户需要的 CA 根证书文件<br>
+则需要用户将自己的 PEM 格式的 CA 证书拷贝 `certs` 根目录下。（仅支持 PEM 格式证书，不支持 DER 格式证书）<br>
+添加证书与`DigiCert_Global_Root_CA2.crt`并列存放    
+![alt text](./assets/list.png)
+
+2. 证书格式说明 
+- `PEM 格式证书`
+
+    **PEM 格式证书** 通常是以 **.pem** 和 **.cer** 后缀名结尾的文件。
+
+    使用文本编辑器打开后，文件内容以 `-----BEGIN CERTIFICATE-----` 开头，以 `-----END CERTIFICATE-----` 结尾。
+- `DER 格式证书`
+
+    **DER 格式证书** 是二进制文件类型。<br>
+
+3. 查看配置
+
+查看proj.conf里如果开了PKG_USING_MBEDTLS_USER_CERTS，就会把certs根目录下的所有文件都合并到ports/src/tls_certificate.c
+![alt text](./assets/proj.png)
 
 ## 例程的使用
 <!-- 说明如何使用例程，比如连接哪些硬件管脚观察波形，编译和烧写可以引用相关文档。
@@ -76,5 +100,5 @@ please input the serial port num:5
 |:---|:---|:---|
 |0.0.1 |01/2025 |初始版本 |
 |0.0.2 |04/2025 |增加OTA |
-| | | |
+|0.0.3 |07/2025 |增加CA证书 |
 | | | |
