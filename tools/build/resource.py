@@ -648,6 +648,7 @@ def GenPartitionTableHeaderFile(src, output_dir, output_name):
                 s += MakeLine('#define {:<50} (0x{:08X})'.format(offset_name, offset))
             if 'custom' in region:
                 for custom in region['custom']:
+                    s += MakeLine('#undef  {}'.format(custom))
                     s += MakeLine('#define {:<50} (0x{:08X})'.format(custom, region['custom'][custom]))
             if 'exec' in region:
                 if (region['exec'] == env['name']):
