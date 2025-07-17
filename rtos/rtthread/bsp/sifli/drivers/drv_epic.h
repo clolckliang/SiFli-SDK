@@ -336,7 +336,7 @@ rt_err_t drv_gpu_check_done(rt_int32_t ms);
  * @return        0 - if not cached  1 - cached
  */
 uint8_t drv_gpu_is_cached_ram(uint32_t start, uint32_t len);
-
+bool drv_epic_is_busy(void);
 #endif /* __DRV_EPIC_H__ */
 
 

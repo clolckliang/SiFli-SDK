@@ -4,13 +4,19 @@
 
 
 
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define APP_TRANS_ANIM_FULL_SCALE (100)
 #ifndef APP_TRANS_ANIM_SNAPSHOT_SCALE
-    #define APP_TRANS_ANIM_SNAPSHOT_SCALE 100
+#define APP_TRANS_ANIM_SNAPSHOT_SCALE 100
 #endif /* !APP_TRANS_ANIM_SNAPSHOT_SCALE */
 
 #ifndef APP_SNAPSHOT_COLOR_DEPTH
-    #define APP_SNAPSHOT_COLOR_DEPTH LV_COLOR_DEPTH
+#define APP_SNAPSHOT_COLOR_DEPTH LV_COLOR_DEPTH
 #endif
 
 #define APP_TRANS_ANIM_PERCENT APP_TRANS_ANIM_SNAPSHOT_SCALE / APP_TRANS_ANIM_FULL_SCALE
@@ -39,5 +45,8 @@ task_t port_app_sche_task_create(task_handler_t task_handler, uint32_t period, v
 void port_app_sche_task_del(task_t task_handler);
 void port_app_sche_enable_indev(bool enable, bool expect_tp);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* APP_SCHEDULE_PORT_H */
 

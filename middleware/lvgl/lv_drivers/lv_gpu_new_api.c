@@ -42,6 +42,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
 #include "rtconfig.h"
 #include "littlevgl2rtt.h"
 #include "lvgl.h"
@@ -782,12 +783,7 @@ static void draw_img(struct _lv_draw_ctx_t *draw_ctx,
     }
 
 #if LV_USE_GPU
-    if ((draw_dsc->recolor_opa == LV_OPA_TRANSP)
-            //&& (0 == other_mask_cnt)
-            //&& disp->driver.gpu_rotate_cb
-            //&& disp->driver.gpu_rotate_frac_cb
-            && EPIC_SUPPORTED_CF(cf)
-       )
+    if (EPIC_SUPPORTED_CF(cf))
     {
         lv_img_dsc_t src;
         lv_img_dsc_t dest;
@@ -808,10 +804,15 @@ static void draw_img(struct _lv_draw_ctx_t *draw_ctx,
         dest.data_size = lv_img_buf_get_img_size(dest.header.w, dest.header.h, dest.header.cf);
         dest.header.always_zero = 0;
 
+        lv_opa_t opa = (cf == LV_IMG_CF_ALPHA_1BIT || \
+                        cf == LV_IMG_CF_ALPHA_2BIT || \
+                        cf == LV_IMG_CF_ALPHA_4BIT || \
+                        cf == LV_IMG_CF_ALPHA_8BIT) ? draw_dsc->recolor_opa : draw_dsc->opa;
+
         {
             img_rotate_opa_frac(&dest, &src, draw_dsc->angle, (uint32_t)draw_dsc->zoom,
                                 src_area, draw_ctx->buf_area,
-                                draw_ctx->clip_area, (lv_point_t *) & (draw_dsc->pivot), draw_dsc->opa, LV_COLOR_CHROMA_KEY,
+                                draw_ctx->clip_area, (lv_point_t *) & (draw_dsc->pivot), opa, draw_dsc->recolor,
                                 draw_dsc->coord_x_frac, draw_dsc->coord_y_frac,
                                 mask_cf, mask_map, &mask_coords);
 

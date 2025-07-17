@@ -436,13 +436,20 @@ int gui_lib_init(void)
 
 #if LV_USING_FREETYPE_ENGINE
     extern uint32_t ft_get_cache_size(void);
-    /* load all ft lib and ft size */
     lvsf_font_load(ft_get_cache_size());
     /* open freetype */
     lv_freetype_open_font(false);
+
 #endif
 
+
+
+
     lv_init();
+#if LV_USE_TINY_TTF
+    extern void lv_font_tiny_init(void);
+    lv_font_tiny_init();
+#endif
 #if LV_USE_LOG
     lv_log_register_print_cb(lv_rt_log);
 #endif

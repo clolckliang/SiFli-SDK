@@ -1,6 +1,7 @@
 #ifndef __GUI_APP_INT_H__
 #define __GUI_APP_INT_H__
 
+
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <board.h>
@@ -26,8 +27,11 @@
 
 
 
-/*---------------------------------app_schedule.h-------------------------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+/*---------------------------------app_schedule.h-------------------------------------------------------------------------*/
 #define SUBPAGE_MAX_LEN 16  //page name maximum length
 #define GUI_APP_MSG_MAX_LEN sizeof(gui_app_msg_t)
 
@@ -264,7 +268,6 @@ void app_scheduler_print_perf_tick(uint8_t en);
 
 /*---------------------------------app_schedule.h-------------------------------------------------------------------------*/
 
-
 #include "app_schedule_port.h"
 
 
@@ -377,4 +380,7 @@ rt_err_t app_trans_anim_free_run_clean(void);
 
 
 
+#ifdef __cplusplus
+}
+#endif
 #endif  /* __GUI_APP_UTILS_H__ */

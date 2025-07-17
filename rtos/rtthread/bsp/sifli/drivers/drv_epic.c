@@ -252,6 +252,7 @@ typedef struct
 
     struct rt_thread task;
     rt_mq_t  mq;
+    uint8_t task_idle; //1: task is idle, 0: task is busy
 
 #endif /* DRV_EPIC_NEW_API */
 
@@ -4463,7 +4464,9 @@ static void epic_task(void *param)
 
     while (1)
     {
+        p_drv_epic->task_idle = 1;
         err = rt_mq_recv(p_drv_epic->mq, &msg, sizeof(msg), RT_WAITING_FOREVER);
+        p_drv_epic->task_idle = 0;
 
         RT_ASSERT(RT_EOK == err);
 
@@ -5294,6 +5297,25 @@ static rt_err_t drv_epic_render_list_init(void)
     return RT_EOK;
 }
 #endif /*DRV_EPIC_NEW_API*/
+
+bool drv_epic_is_busy(void)
+{
+    if (0 == drv_epic_inited) return false;
+
+#ifdef DRV_EPIC_NEW_API
+    if (drv_epic.mq) if (drv_epic.mq->entry > 0) return true;
+    if (drv_epic.task_idle != 1) return true;
+#endif /* DRV_EPIC_NEW_API*/
+
+    if (-RT_ETIMEOUT == epic_sem_trytake())
+        return true;
+    else
+    {
+        epic_sem_release();
+        return false;
+    }
+}
+
 
 int drv_epic_init(void)
 {

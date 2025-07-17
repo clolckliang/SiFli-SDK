@@ -67,16 +67,13 @@ void lv_hal_init(const char *name)
     /* LCD Device Init */
     lv_lcd_init(name);
 
-
     lv_sifli_img_decoder();
-
 
     /* littlevGL Input device interface */
     lv_touchscreen_create("touch");
 
     // Init keyboard driver
-    //keypad_init();
-
+    keypad_init();
 
     //wheel_init();
 

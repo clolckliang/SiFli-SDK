@@ -282,6 +282,19 @@ LV_FONT_DECLARE(lv_font_unscii_16)
 LV_FONT_DECLARE(lv_font_simyou_30_ch)
 #endif
 
+#if LV_FONT_TINY_TTF_UBUNTU
+LV_FONT_DECLARE(*lv_font_ubuntu_12)
+LV_FONT_DECLARE(*lv_font_ubuntu_14)
+LV_FONT_DECLARE(*lv_font_ubuntu_16)
+LV_FONT_DECLARE(*lv_font_ubuntu_18)
+LV_FONT_DECLARE(*lv_font_ubuntu_20)
+LV_FONT_DECLARE(*lv_font_ubuntu_24)
+LV_FONT_DECLARE(*lv_font_ubuntu_28)
+LV_FONT_DECLARE(*lv_font_ubuntu_36)
+LV_FONT_DECLARE(*lv_font_ubuntu_56)
+LV_FONT_DECLARE(*lv_font_ubuntu_72)
+#endif
+
 /*Declare the custom (user defined) fonts*/
 #ifdef LV_FONT_CUSTOM_DECLARE
 LV_FONT_CUSTOM_DECLARE

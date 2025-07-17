@@ -204,6 +204,18 @@ extern "C" {
 #  define CONFIG_LV_FONT_DEFAULT &lv_font_unscii_16
 #elif defined(LV_FONT_DEFAULT_SIMYOU_30_CH)
 #  define CONFIG_LV_FONT_DEFAULT &lv_font_simyou_30_ch
+#elif defined(LV_FONT_DEFAULT_UBUNTU_12)
+#  define CONFIG_LV_FONT_DEFAULT lv_font_ubuntu_12
+#elif defined(LV_FONT_DEFAULT_UBUNTU_14)
+#  define CONFIG_LV_FONT_DEFAULT lv_font_ubuntu_14
+#elif defined(LV_FONT_DEFAULT_UBUNTU_16)
+#  define CONFIG_LV_FONT_DEFAULT lv_font_ubuntu_16
+#elif defined(LV_FONT_DEFAULT_UBUNTU_18)
+#  define CONFIG_LV_FONT_DEFAULT lv_font_ubuntu_18
+#elif defined(LV_FONT_DEFAULT_UBUNTU_20)
+#  define CONFIG_LV_FONT_DEFAULT lv_font_ubuntu_20
+#elif defined(LV_FONT_DEFAULT_UBUNTU_24)
+#  define CONFIG_LV_FONT_DEFAULT lv_font_ubuntu_24
 #endif
 
 /*------------------

@@ -770,6 +770,8 @@ menu "LVGL V9 configuration"
 				bool "Enable UNSCII 16 (Perfect monospace font)"
 			config LV_FONT_SIMYOU_30_CH
 				bool "SimYou 30 simple chinese"
+			config LV_FONT_TINY_TTF_UBUNTU
+				bool "Tiny TTF ubuntu (include size 12,14,16,18,20,24,28,36,56,72)"
 		endmenu
 
 		choice LV_FONT_DEFAULT
@@ -863,6 +865,24 @@ menu "LVGL V9 configuration"
 			config LV_FONT_DEFAULT_SIMYOU_30_CH
 				bool "SimYou 30 simple chinese"
 				select LV_FONT_SIMYOU_30_CH
+			config LV_FONT_DEFAULT_UBUNTU_12
+				bool "Tiny ttf ubuntu 12"
+				select LV_USE_TINY_TTF
+			config LV_FONT_DEFAULT_UBUNTU_14
+				bool "Tiny ttf ubuntu 14"
+				select LV_USE_TINY_TTF
+			config LV_FONT_DEFAULT_UBUNTU_16
+				bool "Tiny ttf ubuntu 16"
+				select LV_USE_TINY_TTF
+			config LV_FONT_DEFAULT_UBUNTU_18
+				bool "Tiny ttf ubuntu 18"
+				select LV_USE_TINY_TTF
+			config LV_FONT_DEFAULT_UBUNTU_20
+				bool "Tiny ttf ubuntu 20"
+				select LV_USE_TINY_TTF
+			config LV_FONT_DEFAULT_UBUNTU_24
+				bool "Tiny ttf ubuntu 24"
+				select LV_USE_TINY_TTF
 		endchoice
 
 		config LV_FONT_FMT_TXT_LARGE
