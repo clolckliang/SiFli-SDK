@@ -164,8 +164,9 @@ void boot_images_help()
         }
 #else
 
-        dfu_install_info info;
-        dfu_install_info info_ext;
+        dfu_install_info info = {0};
+        dfu_install_info info_ext = {0};
+
         if (DFU_DOWNLOAD_REGION_START_ADDR != FLASH_UNINIT_32)
         {
             g_flash_read(DFU_DOWNLOAD_REGION_START_ADDR, (const int8_t *)&info, sizeof(dfu_install_info));
