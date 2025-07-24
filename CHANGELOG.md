@@ -1,4 +1,60 @@
-# SiFli SDK change Log v2.4.1
+# SiFli SDK change Log v2.4.2
+## Change log since v2.4.1
+### Bluetooth
+#### Fixed
+- bt: Fix bug about lwip timer not restart 
+
+### Drivers
+#### Fixed
+- adc: Fix sf32lb52 letter series ADC measurement abnormal as chip id is not detected correctly
+- ezip: Fixed abnormal EZIP IRQ when using 'HAL_EZIP_DecodeFast_IT' API
+- rng: Fix RNG not work as STOP bit is not cleared after HAL_RNG_DeInit is called
+- sdio: Fix the bug where sdio experiences data gaps when reading large amounts of data
+- usbd: Remove workaround and commit formal fix for CDC VCOM open fail issue
+- emmc: Fix eMMC boot fail on sf32lb52 letter series when using PMU reboot or wakeup from hibernate
+- sdio: Fix block_dev write 4 bytes alignment issue
+
+#### Changed
+- sdio: Add more sleep mode
+- encoder: Add multiple encoder support
+
+### Examples
+#### Fixed
+- `bootloader`:  Fix 52x boot fail if building with Keil 5.39 and DFU_DOWNLOAD_REGION is not defined in ptab.json
+
+#### Changed
+- `bt/pan`: Add root certificate instructions in README
+
+#### Added
+- `vglite`: Add vglite example
+
+### Middleware
+#### Changed
+- lvgl: Update support for lvgl v9
+- opus: Use silk only mode for small stack size
+- audio: Allow disable uplink agc by Automatic Speech Recognition app
+- lwip: Use rt_kprintf instead of printf to make print work when UART TX DMA is enabledDMA
+- lwip: Fix bug about lwip sys timeout uinit failed
+
+### Tools
+#### Fixed
+- build: Fix C++ build warning
+- build: Fix misuse of CCFLAGS in child project
+
+### Changed
+- build: Update img resource builder to support GIF
+- build: Generate img resource into build folder
+- build: Don't specify C++ standard to support more C++ features and as many Keil version as possible
+
+### BSP
+#### Added
+- board: Add `sf32lb52-lcd_n16r8_jdi` board
+
+### Docs
+#### Added
+- Add partition table doc
+
+
 ## Change log since v2.4.0
 ### Bluetooth
 #### Fixed
