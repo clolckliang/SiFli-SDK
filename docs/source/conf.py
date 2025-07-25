@@ -15,7 +15,7 @@ project = 'SiFli SDK编程指南'
 copyright = '2019 - {} 思澈科技（上海）有限公司'.format(current_year)
 author = 'SiFli'
 language = 'zh_CN'
-version = 'v2.3.5'
+version = os.environ.get('SIFLI_DOC_VERSION', 'latest')
 
 if "SF32LB55X" in tags:
     chip = 'sf32lb55x'
@@ -60,16 +60,13 @@ html_static_path = ['_static']
 html_context = {
     "versions": [
         ("latest", "latest"),
-        ("v2.3.5", "v2.3.5"),
-        ("v2.3.4", "v2.3.4"),
-        ("v2.3.3", "v2.3.3"),
-        ("v2.3",   "v2.3"),
+        # 只保留latest版本，其他版本通过JavaScript动态加载
     ],
     "chips": [
-        ("SF32LB52x", "SF32LB52x"),
-        ("SF32LB56x", "SF32LB56x"),
-        ("SF32LB58x", "SF32LB58x"),
-        ("SF32LB55x", "SF32LB55x"),
+        ("SF32LB52x", "sf32lb52x"),
+        ("SF32LB56x", "sf32lb56x"),
+        ("SF32LB58x", "sf32lb58x"),
+        ("SF32LB55x", "sf32lb55x"),
     ],
     "current_version": version,
     "current_chip": chip,
@@ -91,10 +88,12 @@ html_theme_options = {
 
 html_css_files = [
     'css/custom.css',
+    'css/feedback.css',
 ]
 
 html_js_files = [
     'js/baidu.js',
+    'js/feedback.js',
 ]
 
 # -- Options for Breathe ----------------------------------------------------
