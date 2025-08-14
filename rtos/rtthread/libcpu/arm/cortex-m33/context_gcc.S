@@ -348,7 +348,7 @@ rt_hw_fatal_error:
     MRS r4, psr                       
     PUSH {r4}         /* push psr     */
     MOV r4, pc                        
-    PUSH {r4}         /* push pc      */    
+    PUSH {lr}         /* push lr as pc to make call stack correct */    
     PUSH {lr}         /* push lr      */
     PUSH {r12}        /* push r12     */
     PUSH {r0 - r3}    /* push r0~r3   */
@@ -373,6 +373,6 @@ rt_hw_fatal_error:
     POP {r4} /* pop pc   */
     POP {r4} /* pop psr  */
     POP {r4} /* pop r4   */
-    B   .
+    BX  lr
 
 
