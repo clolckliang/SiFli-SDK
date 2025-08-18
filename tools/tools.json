@@ -22,42 +22,42 @@
       "version_regex": "sftool\\s+([\\d.]+)",
       "versions": [
         {
-          "name": "0.1.11",
+          "name": "0.1.12",
           "status": "recommended",
           "macos-arm64": {
-            "sha256": "D86146425A1351909FF78887F05542451CF2D6B41B47FC100749E0DB1605789A",
-            "size": 3292184,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-aarch64-apple-darwin.tar.xz"
+            "sha256": "E611523F70893C416D7F2E6B70219F6E9C9E2C6DA16C9408565D09A8FC18350E",
+            "size": 3298112,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-aarch64-apple-darwin.tar.xz"
           },
           "linux-arm64": {
-            "sha256": "7A24FB5DBED809CC7F509F171FB210863CBDC2A14AA83FA2C70F141991B46066",
-            "size": 3383844,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-aarch64-unknown-linux-gnu.tar.xz"
+            "sha256": "81981E262B63E3E2CA8DBF2A6888DC9A29954D7E23B58AA6EC5ACF00DD2B6E6F",
+            "size": 3393428,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-aarch64-unknown-linux-gnu.tar.xz"
           },
           "win32": {
-            "sha256": "6639AC38EC62ED4AF5F1CDBCE3F6954C95A059EC38BAECA6A942C9A99B2E82F4",
-            "size": 3615868,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-i686-pc-windows-msvc.zip"
+            "sha256": "107F9718421ED30FBF997D24EF3E033CB5680FB63C2C681E365D28FCE209BD8A",
+            "size": 3623299,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-i686-pc-windows-msvc.zip"
           },
           "linux-i686": {
-            "sha256": "8176F1B25216DD1A6FC7E66ABD8ACA5752C4757CDC2C94DAF099A91445B75C12",
-            "size": 3575576,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-i686-unknown-linux-gnu.tar.xz"
+            "sha256": "07CAC3740D3EAD02F6404F575A2A31F539F3ADD3C9BBD014C3A6CDF590159FAF",
+            "size": 3581584,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-i686-unknown-linux-gnu.tar.xz"
           },
           "macos": {
-            "sha256": "6ECB78C6AB5484414E25AEE3D8927EA70661B0CAA5739D7E15D6587439F80AEC",
-            "size": 3394192,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-x86_64-apple-darwin.tar.xz"
+            "sha256": "405ACDF65345CC335B62456F88926BCF54B2B2CBBDDA89798D1FE0320F5D45E3",
+            "size": 3400828,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-x86_64-apple-darwin.tar.xz"
           },
           "win64": {
-            "sha256": "4D4546BD9687C15FDFB629ACB084365AECB5A8CC1C755EC52EA1871B6BBC8457",
-            "size": 3730836,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-x86_64-pc-windows-msvc.zip"
+            "sha256": "9CEF2FAE44631E01BAE391F0873E958633CC4C6E3B3C19E6C4C057C3CEE34F4B",
+            "size": 3739170,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-x86_64-pc-windows-msvc.zip"
           },
           "linux-amd64": {
-            "sha256": "BD4F98DD9263BE5FDB7978846C2B50150FA1D3BBA43EE98ADC6DEC3545CB4FE9",
-            "size": 3511408,
-            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.11/sftool-0.1.11-x86_64-unknown-linux-gnu.tar.xz"
+            "sha256": "231EC30A5A16EDBAC9B786D1A109CBCF9D6DD0FD7D93443C6438C2A12FE8EC56",
+            "size": 3516488,
+            "url": "https://github.com/OpenSiFli/sftool/releases/download/0.1.12/sftool-0.1.12-x86_64-unknown-linux-gnu.tar.xz"
           }
         },
         {
