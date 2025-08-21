@@ -40,6 +40,10 @@ void BSP_Power_Up(bool is_deep_sleep)
 #endif /* BSP_USING_PSRAM1 */
     }
 #endif  /* SOC_BF0_HCPU */
+
+#ifdef RT_USING_PM
+    BSP_GPIO_Set(21, 0, 1);
+#endif
 }
 
 
