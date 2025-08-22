@@ -71,7 +71,10 @@
 #if defined(MBEDTLS_PLATFORM_MEMORY) && \
    (!defined(MBEDTLS_PLATFORM_FREE_MACRO) || \
     defined(MBEDTLS_PLATFORM_CALLOC_MACRO))
-#define ALTCP_MBEDTLS_PLATFORM_ALLOC 1
+// TODO: disable it for now as tls_malloc implementation in this file is conflicted with
+//      the macro definition in external/mbedtls_228/ports/inc/tls_config.h.
+//      mbedtls_platform_set_calloc_free would be called by user code before using lwip and mbedtls.
+#define ALTCP_MBEDTLS_PLATFORM_ALLOC 0
 #else
 #define ALTCP_MBEDTLS_PLATFORM_ALLOC 0
 #endif
