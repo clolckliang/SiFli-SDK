@@ -3153,7 +3153,7 @@ def main(argv: List[str]) -> None:
     g.sifli_sdk_path = args.sifli_sdk_path or os.environ.get('SIFLI_SDK_PATH') or os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
     os.environ['SIFLI_SDK_PATH'] = g.sifli_sdk_path
 
-    g.sifli_sdk_tools_path = os.environ.get('sifli_sdk_tools_path') or os.path.expanduser(SIFLI_SDK_TOOLS_PATH_DEFAULT)
+    g.sifli_sdk_tools_path = os.environ.get('SIFLI_SDK_TOOLS_PATH') or os.path.expanduser(SIFLI_SDK_TOOLS_PATH_DEFAULT)
 
     # On macOS, unset __PYVENV_LAUNCHER__ variable if it is set.
     # Otherwise sys.executable keeps pointing to the system Python, even when a python binary from a virtualenv is invoked.
