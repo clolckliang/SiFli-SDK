@@ -1218,8 +1218,9 @@ def PrepareBuilding(env, has_libcpu=False, remove_components=[], buildlib=None):
             env['EXPANDED_TARGETS'] = expand_target            
             env['EXPANDED_LDIR'] = expand_ldir
             env["TEMPFILE"] = SCons.Platform.TempFileMunge
-            #env["LINKCOM"] = "${TEMPFILE('%s','$LINKCOMSTR')}"%env['LINKCOM']    
-            env["LINKCOM"] = "${TEMPFILE('$LINK -o $EXPANDED_TARGETS $LINKFLAGS $__RPATH $EXPANDED_SOURCES $EXPANDED_LDIR -Wl,--start-group $_LIBFLAGS -Wl,--end-group','$LINKCOMSTR')}"  
+            #env["LINKCOM"] = "${TEMPFILE('%s','$LINKCOMSTR')}"%env['LINKCOM']   
+            env.setdefault('LINKFLAGS_POST', '') 
+            env["LINKCOM"] = "${TEMPFILE('$LINK -o $EXPANDED_TARGETS $LINKFLAGS $__RPATH $EXPANDED_SOURCES $EXPANDED_LDIR -Wl,--start-group $LINKFLAGS_POST $_LIBFLAGS -Wl,--end-group ','$LINKCOMSTR')}"  
             #if hasattr(SCons.Platform.TempFileMunge, 'version'):
             #    env["CCCOM"] = "${TEMPFILE('%s','$CCCOMSTR')}"%env['CCCOM']
             #    env["CXXCOM"] = "${TEMPFILE('%s','$CXXCOMSTR')}"%env['CXXCOM']
