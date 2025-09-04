@@ -2988,7 +2988,7 @@ static void client_callback_to_user(audio_client_t c)
     if (c && c->callback)
     {
         struct rt_ringbuffer *rb = &c->ring_buf;
-        if (rt_ringbuffer_space_len(rb) < TX_DMA_SIZE)
+        if (rt_ringbuffer_data_len(rb) < TX_DMA_SIZE)
         {
             c->callback(as_callback_cmd_cache_empty, c->user_data, 0);
         }
@@ -3650,9 +3650,9 @@ put_raw:
         for (uint32_t i = 0; i + 1 < samples; i += 2)
         {
             left = p[i];
-            right = p[i+1];
+            right = p[i + 1];
             p[i] = (left >> 1) + (right >> 1);
-            p[i+1] = p[i];
+            p[i + 1] = p[i];
         }
     }
 #endif

@@ -1294,7 +1294,7 @@ check_write_result:
             uint32_t cache_time_ms = 150;
             audio_ioctl(ctrl->client, 1, &cache_time_ms);
             rt_thread_mdelay(cache_time_ms + 20);
-
+            ctrl->is_file_end = 1;
             if (ctrl->loop_times > 0)
             {
                 ctrl->loop_times--;

@@ -691,7 +691,11 @@ void audio_3a_data_process(audio_3a_t *p_3a_env, uint8_t *fifo, uint16_t fifo_si
     RT_ASSERT(fifo_size == p_3a_env->frame_len)
 
     memcpy(outframe2, fifo, fifo_size);
-
+    audio_dump_data(ADUMP_AUDPRC, fifo, fifo_size);
+    if (g_bypass)
+    {
+        goto bypass_3a;
+    }
 #if PKG_USING_AUDIO_TEST_API
     {
         extern uint8_t audio_test_api_3a_is_enable();
@@ -813,6 +817,8 @@ void audio_3a_data_process(audio_3a_t *p_3a_env, uint8_t *fifo, uint16_t fifo_si
         audio_tick_out(AUDIO_RAMPOUT_TIME);
         audio_dump_data(ADUMP_RAMP_OUT_OUT, (uint8_t *)data_out, p_3a_env->frame_len);
 #endif
+
+bypass_3a:
         if (rt_ringbuffer_space_len(p_3a_env->rbuf_out) >= p_3a_env->frame_len)
         {
             rt_ringbuffer_put(p_3a_env->rbuf_out, (uint8_t *)data_out, p_3a_env->frame_len);
