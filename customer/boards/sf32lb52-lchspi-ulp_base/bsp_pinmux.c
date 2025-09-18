@@ -198,7 +198,7 @@ static void BSP_PIN_Common(void)
     /* Keep default pull-down unchanged. Uart download driver would use this function,
      * if pulldown is disabled, download driver would not work on the board without external pull-down
      */
-    // HAL_PIN_Set(PAD_PA34, GPIO_A34, PIN_NOPULL, 1);
+    HAL_PIN_Set(PAD_PA34, GPIO_A34, PIN_NOPULL, 1);
     // Key2
     HAL_PIN_Set(PAD_PA43, GPIO_A43, PIN_NOPULL, 1);
 
