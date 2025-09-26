@@ -1211,8 +1211,13 @@ def PrepareBuilding(env, has_libcpu=False, remove_components=[], buildlib=None):
                 return ' '.join(tlist)
 
             def expand_ldir(target, source, env, for_signature):
-                slist = [str(a).replace('\\','\\\\') for a in env['LIBPATH']]
-                return '-L' + ' -L'.join(slist)
+                if 'LIBPATH' in env and len(env['LIBPATH']) > 0:
+                    slist = [str(a).replace('\\','\\\\') for a in env['LIBPATH']]
+                    ldir = '-L' + ' -L'.join(slist)
+                else:
+                    ldir = ''
+
+                return ldir
 
             env['EXPANDED_SOURCES'] = expand_sources
             env['EXPANDED_TARGETS'] = expand_target            
