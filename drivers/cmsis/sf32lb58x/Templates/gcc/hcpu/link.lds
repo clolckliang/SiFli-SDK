@@ -471,6 +471,7 @@ SECTIONS
     *(.data)
     *(.data.*)
     *(.l1_ret_data_*)
+    *(Jlink_RTT)
 
     . = ALIGN(4);
     /* preinit data */
