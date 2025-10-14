@@ -5,6 +5,7 @@ import shutil
 import copy_example_doc
 
 def run_command(command, cwd=None):
+    print(f"Run command: {command}")
     result = subprocess.run(command, shell=True, cwd=cwd)
     if result.returncode != 0:
         print(f"Error executing {command}")
@@ -32,14 +33,17 @@ def generate_doxygen_xml(board):
 
 def make_html(board):
     print(f"Building HTML documentation for {board}...")
+    if args.cores > 1:
+        # eager `only` is implemented by extension `sphinx_selective_exclude`
+        print("WARNING: eager `only` directive doesn't work properly when number of parallel jobs is greater than 1")
     if board == '52x':
-        run_command('sphinx-build -M html source build_52x -t SF32LB52X -j 8')
+        run_command(f'sphinx-build -M html source build_52x -t SF32LB52X -j {args.cores}')
     elif board == '55x':
-        run_command('sphinx-build -M html source build_55x -t SF32LB55X -j 8')
+        run_command(f'sphinx-build -M html source build_55x -t SF32LB55X -j {args.cores}')
     elif board == '56x':
-        run_command('sphinx-build -M html source build_56x -t SF32LB56X -j 8')
+        run_command(f'sphinx-build -M html source build_56x -t SF32LB56X -j {args.cores}')
     elif board == '58x':
-        run_command('sphinx-build -M html source build_58x -t SF32LB58X -j 8')
+        run_command(f'sphinx-build -M html source build_58x -t SF32LB58X -j {args.cores}')
 
 
 def copy_to_output(board):
@@ -85,8 +89,10 @@ def main(board):
     copy_to_output(board)
 
 if __name__ == "__main__":
+    global args
     parser = argparse.ArgumentParser(description='Generate documentation for specified board.')
     parser.add_argument('board', choices=['52x', '55x', '56x', '58x'], help='Specify the board (52x or 55x or 56x or 58x)')
+    parser.add_argument('--cores', type=int, default=1, help='number for cores used by multi-thread building')
     args = parser.parse_args()
 
     main(args.board)
