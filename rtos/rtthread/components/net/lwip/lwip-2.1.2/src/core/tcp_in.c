@@ -1902,6 +1902,16 @@ tcp_receive(struct tcp_pcb *pcb)
                                discard. */
                             if (inseg.len > next->len)
                             {
+
+                                /* If next segment is the last segment in ooseq
+                                   and smaller than inseg, that means it has been
+                                   trimmed before to fit our window, so we just
+                                   break here. */
+                                if (next->next == NULL)
+                                {
+                                    break;
+                                }
+
                                 /* The incoming segment is larger than the old
                                    segment. We replace some segments with the new
                                    one. */
