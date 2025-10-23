@@ -1,0 +1,14 @@
+from building import *
+Import('rtconfig')
+
+src   = []
+cwd   = GetCurrentDir()
+
+src += Glob("./*.c")
+
+CPPPATH = [cwd]
+
+# add src and include to group.
+group = DefineGroup('middleware', src,depend = ['USING_DFU_PAN'],CPPPATH = CPPPATH)
+    
+Return('group')

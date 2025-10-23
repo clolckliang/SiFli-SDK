@@ -174,6 +174,11 @@ menu "Sifli middleware"
             default n
             depends on SECBOOT_USING_APP_IMG_SIG_VERIFIY
     endif
+    
+    menuconfig USING_DFU_PAN
+        bool "Using dfu pan"
+        depends on BF0_HCPU
+        default n
 
     menuconfig BSP_USING_DFU
         bool "Device firmware update support functions"

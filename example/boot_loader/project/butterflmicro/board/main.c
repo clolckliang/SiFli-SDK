@@ -11,10 +11,34 @@
 #include <rtconfig.h>
 #include <board.h>
 #include <string.h>
+#include "stdio.h"
 #include "register.h"
 #include "../dfu/dfu.h"
+#include "../dfu_pan/dfu_pan_macro.h"
 #include "boot_flash.h"
 #include "secboot.h"
+
+
+
+// Check if OTA program is valid
+int is_ota_program_valid(uint32_t ota_addr)
+{
+    uint32_t sp_val = 0, pc_val = 0;
+    
+    // Read the vector table of the OTA program
+    g_flash_read(ota_addr, (const int8_t*)&sp_val, sizeof(uint32_t));
+    g_flash_read(ota_addr + 4, (const int8_t*)&pc_val, sizeof(uint32_t));
+    
+    // Simple validation of vector table validity (check if stack pointer is in reasonable range)
+    if ((sp_val & 0xFFFF0000) == 0x20000000) // Stack pointer should be in RAM area
+    {
+        return 1; // OTA program is valid
+    }
+    
+    return 0; // OTA program is invalid
+}
+
+
 
 int board_boot_src;
 struct sec_configuration sec_config_cache;
@@ -146,10 +170,13 @@ void dfu_boot_img_in_flash(int flashid)
                 HAL_FLASH_ALIAS_CFG(boot_handle, dest, img_hdr->length, src - dest);
             else if (src != dest)
                 g_flash_read(src, (const int8_t *)dest, img_hdr->length);
+
             run_img(dest);
         }
     }
 }
+
+
 
 void boot_images_help()
 {
@@ -163,6 +190,37 @@ void boot_images_help()
             dfu_boot_img_in_flash(flash_id);
         }
 #else
+// dfu_pan logical program： 
+        if(DFU_PAN_LOADER_START_ADDR != DFU_PAN_FLASH_UNINIT_32 && DFU_PAN_LOADER_SIZE != DFU_PAN_FLASH_UNINIT_32)
+        {
+            bool needs_update = 0;
+            for (int i = 0; i < MAX_VERSION_FILES; i++) {
+                uint32_t needs_update_addr = VERSION_INFO_BASE_ADDR + i * VERSION_INFO_SIZE + NEEDS_UPDATE_OFFSET;
+                
+                uint32_t needs_update_value = 0;
+                int result = g_flash_read(needs_update_addr, (const int8_t*)&needs_update_value, sizeof(uint32_t));
+                
+                if (result == sizeof(uint32_t) && needs_update_value) {
+                    needs_update = 1;
+                    break;
+                }
+            }
+            if (needs_update) 
+            {       
+                
+                // Check whether the OTA program is functioning properly
+                if (is_ota_program_valid(DFU_PAN_LOADER_START_ADDR))
+                {
+                    // Directly jump to the OTA program
+                    run_img(DFU_PAN_LOADER_START_ADDR);
+                }
+                else
+                {
+                    
+                }
+            }
+        }
+// OTA logical program end
 
         dfu_install_info info = {0};
         dfu_install_info info_ext = {0};
@@ -194,6 +252,7 @@ void boot_images_help()
             int flash_id = ((uint32_t)sec_config_cache.running_imgs[CORE_HCPU] - g_config_addr - 0x1000) / sizeof(struct image_header_enc) + DFU_FLASH_IMG_LCPU;
             board_init_psram();
             dfu_boot_img_in_flash(flash_id);
+
         }
 #endif
     }
@@ -231,6 +290,7 @@ void hw_preinit0(void)
     int entry(void)
 #endif
 {
+
     HAL_Delay_us(0);
 
     if (__HAL_SYSCFG_GET_REVID() >= HAL_CHIP_REV_ID_A4)
@@ -283,5 +343,3 @@ void hw_preinit0(void)
 
     return HAL_OK;
 }
-
-

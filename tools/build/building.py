@@ -2774,6 +2774,12 @@ def AddDFU(SIFLI_SDK):
     proj_path = os.path.join(SIFLI_SDK, 'example/dfu/project')
     AddChildProj(proj_name, proj_path, False)
 
+def AddDFU_PAN(SIFLI_SDK):
+    proj_path = None
+    proj_name = 'dfu_pan'
+    proj_path = os.path.join(SIFLI_SDK, 'example/dfu_pan/project')
+    AddChildProj(proj_name, proj_path, False)
+
 def AddLCPU(SIFLI_SDK, chip,target_file=None):
     if "SF32LB56X" == chip or "SF32LB52X" == chip or "SF32LB58X" == chip:
         proj_path = None
