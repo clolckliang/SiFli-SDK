@@ -1365,7 +1365,7 @@ __HAL_ROM_USED uint32_t HAL_DMA_GetError(DMA_HandleTypeDef *hdma)
 {
     return hdma->ErrorCode;
 }
-
+#ifdef DMA_SUPPORT_DYN_CHANNEL_ALLOC
 /**
   * @brief  Allocates a DMA channel dynamically
   * @param  hdma Pointer to a DMA_HandleTypeDef structure that contains
@@ -1387,6 +1387,7 @@ __HAL_ROM_USED HAL_StatusTypeDef HAL_DMA_FreeChannel(DMA_HandleTypeDef *hdma)
 {
     return DMA_FreeChannel(hdma);
 }
+#endif /* DMA_SUPPORT_DYN_CHANNEL_ALLOC */
 /**
   * @} DMA_Exported_Functions_Group3
   */
