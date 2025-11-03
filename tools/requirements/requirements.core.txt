@@ -26,3 +26,5 @@ tqdm
 tomli_w
 conan
 cryptography
+json5
+crccheck
