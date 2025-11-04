@@ -170,13 +170,13 @@ fatal error on thread: app_watc?
 - 新建一个工程，选择适当的Device驱动(Cortex-M33),  Register Set选择Cortex-M33 (with FPU), 以及外设SVD文件(根据芯片型号选择，路径为_$SDK_ROOT/tools/svd_external)
 
 - 打开_SifliUsartServer.exe_ 并点击连接，注意所需要调试的核心选择及核心对应的串口号
-![](/assets/UsartServer.png)
+![](../../assets/UsartServer.png)
 
 - 下一步OZone选择UART的连接方式，Host Interface选择IP, IP Address填写UartServer的SERVER
-![](/assets/Ozone_uart_debug_Step1.png)
+![](../../assets/Ozone_uart_debug_Step1.png)
 
 - 选择烧录程序的ELF文件，读取符号信息
-![](/assets/Ozone_debug_Step3.png)
+![](../../assets/Ozone_debug_Step3.png)
 
 
 ## 3. 日志接口

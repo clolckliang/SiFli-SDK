@@ -176,13 +176,13 @@ If the log analysis cannot pinpoint the crash issue, the Ozone debugging tool pr
 - Create a new project, select the appropriate Device driver (Cortex-M33), choose the Register Set as Cortex-M33 (with FPU), and the peripheral SVD file (select based on the chip model, the path is $_SDK_ROOT/tools/svd_external)
 
 - Open _SifliUsartServer.exe_ and click on "Connect". Pay attention to the selected core for debugging and the corresponding serial port number for that core.
-![](/assets/UsartServer.png)
+![](../../assets/UsartServer.png)
 
 - Next, OZone selects the connection method for UART, Host Interface is set to IP, and IP Address is filled with SERVER of UartServer.
-![](/assets/Ozone_uart_debug_Step1.png)
+![](../../assets/Ozone_uart_debug_Step1.png)
 
 - Select the ELF file for the burning program and read the symbol information
-![](/assets/Ozone_debug_Step3.png)
+![](../../assets/Ozone_debug_Step3.png)
 
 ## 3. Log Interface
 
