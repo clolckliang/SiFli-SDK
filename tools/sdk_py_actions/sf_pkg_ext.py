@@ -7,6 +7,9 @@ import sys
 import subprocess
 import json
 import base64
+import platform
+import socket
+import uuid
 from typing import Any, Dict, Optional
 
 import click
@@ -24,11 +27,56 @@ CREDENTIALS_FILE = os.path.join(sdk_tools_path, '.sf-pkg')
 # In production, you might want to use a more secure approach
 SALT = b'sifli_sdk_salt_v1'
 
+
+def _machine_identifier() -> bytes:
+    """
+    Derive a machine-specific identifier.
+    Prefers os.uname() when available to keep backward compatibility with previous keys.
+    """
+    try:
+        return os.uname().nodename.encode()
+    except AttributeError:
+        pass
+
+    candidates = []
+
+    env_host = os.environ.get('COMPUTERNAME') or os.environ.get('HOSTNAME')
+    if env_host:
+        candidates.append(env_host)
+
+    node = platform.node()
+    if node:
+        candidates.append(node)
+
+    try:
+        hostname = socket.gethostname()
+        if hostname:
+            candidates.append(hostname)
+    except OSError:
+        pass
+
+    # uuid.getnode() is stable for a given machine (MAC or random fallback)
+    mac = uuid.getnode()
+    if mac:
+        candidates.append(hex(mac))
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique_parts = []
+    for part in candidates:
+        part = str(part).strip()
+        if part and part not in seen:
+            unique_parts.append(part)
+            seen.add(part)
+
+    identifier = '::'.join(unique_parts) if unique_parts else 'sifli-default'
+    return identifier.encode()
+
+
 def get_encryption_key() -> bytes:
     """Generate encryption key from machine-specific data"""
-    # Use hostname as part of the key derivation
-    machine_id = os.uname().nodename.encode()
-    
+    machine_id = _machine_identifier()
+
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
