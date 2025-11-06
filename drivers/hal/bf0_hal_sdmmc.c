@@ -203,6 +203,32 @@ uint32_t HAL_SDMMC_GET_IRQ_MASK(SD_TypeDef *hsd)
     return hsd->IER;
 }
 
+HAL_StatusTypeDef HAL_SDMMC_ENABLE_CEATA_MODE(SD_TypeDef *hsd, uint8_t single, uint8_t multi)
+{
+    uint32_t value = 0;
+    if (hsd == NULL)
+        return HAL_ERROR;
+    value = SD_CEATA_ENABLE_SDIO_IRQ;
+    if (single)/*host support 4 wires interrupt on single block data transfers*/
+        value |= SD_CEATA_SDIO_4WIRES_IRQ;
+    if (multi)/*host support 4 wires interrupt on multi-block data transfers*/
+        value |= SD_CEATA_SDIO_4WIRES_MULTI_IRQ;
+    hsd->CEATA = value;
+    return HAL_OK;
+}
+
+uint32_t HAL_SDMMC_DISABLE_CEATA_MODE(SD_TypeDef *hsd)
+{
+    if (hsd == NULL)
+        return 0;
+    hsd->CEATA &= ~(SD_CEATA_ENABLE_SDIO_IRQ |
+                    SD_CEATA_SDIO_4WIRES_IRQ |
+                    SD_CEATA_SDIO_4WIRES_MULTI_IRQ);
+
+    return hsd->IER;
+}
+
+
 HAL_StatusTypeDef HAL_SDMMC_SET_CMD(SD_TypeDef *hsd, uint32_t cmd_idx,
                                     uint32_t resp, uint32_t arg)
 {

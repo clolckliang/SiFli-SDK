@@ -292,6 +292,23 @@ HAL_StatusTypeDef HAL_SDMMC_SET_CAOFFSET(SD_TypeDef *hsd, uint32_t offset);
 HAL_StatusTypeDef HAL_SDMMC_VOID_FIFO(SD_TypeDef *hsd, uint8_t en);
 
 /**
+  * @brief Enable CE-ATA (SDIO) mode and configure SDIO interrupt support.
+  * @param hsd SDMMC instance handle.
+  * @param single Enable SDIO IRQ support for single-block transfers (non-zero to enable).
+  * @param multi  Enable SDIO IRQ support for multi-block transfers (non-zero to enable).
+  * @retval HAL status (HAL_OK on success, HAL_ERROR on failure)
+  */
+HAL_StatusTypeDef HAL_SDMMC_ENABLE_CEATA_MODE(SD_TypeDef *hsd, uint8_t single, uint8_t multi);
+
+/**
+  * @brief Disable CE-ATA (SDIO IRQ) mode and clear related settings.
+  * @param hsd SDMMC instance handle.
+  * @retval Current IRQ mask register (IER) value after disabling; 0 if @p hsd is NULL.
+  */
+uint32_t HAL_SDMMC_DISABLE_CEATA_MODE(SD_TypeDef *hsd);
+
+
+/**
   * @}
   */
 

@@ -67,6 +67,7 @@ struct rthw_sdio
     uint32_t cmd_to;        // command time out value, it should related with freq
     uint32_t part_offset;   // start offset for read/write with device interface
     uint32_t cur_freq;      // current sd frequency
+    uint32_t irq_flag;
 };
 
 ALIGN(SDIO_ALIGN_LEN)
@@ -194,17 +195,28 @@ static void recov_sdio_reg(void)
 void rt_hw_sdio_timeout_handle(void)
 {
     dump_sdio_reg();
+#ifdef SF32LB52X
     HAL_RCC_ResetModule(RCC_MOD_SDMMC1);
+#else
+    HAL_RCC_ResetModule(RCC_MOD_SDMMC2);
+#endif
     rt_thread_mdelay(1);
     recov_sdio_reg();
 }
 
 /**
-  * @brief  This function wait sdio completed.
-  * @param  sdio  rthw_sdio
-  * @retval None
-  */
-static void rthw_sdio_wait_completed(struct rthw_sdio *sdio)
+    * @brief  Wait SDIO command/data completion and process status/response.
+    * @param  sdio  rthw_sdio context
+    * @retval 0     Completion handled (may be success or a non-retryable error).
+    *               Check cmd->err / data->err for detailed result:
+    *               - RT_EOK / 0: success
+    *               - -RT_ERROR / -RT_ETIMEOUT: error conditions already recorded
+    * @retval 1     Request to retry (re-send) the command. Typical cases:
+    *               - Response Command Index (RCI) mismatch (transient)
+    *               - Command/Data timeout that is considered retryable
+    *
+    */
+static int rthw_sdio_wait_completed(struct rthw_sdio *sdio)
 {
     rt_uint32_t status, rci;
     struct rt_mmcsd_cmd *cmd = sdio->pkg->cmd;
@@ -212,25 +224,36 @@ static void rthw_sdio_wait_completed(struct rthw_sdio *sdio)
     SD_TypeDef *hw_sdio = sdio->sdio_des.hw_sdio;
 
     if (rt_event_recv(&sdio->event, 0xffffffff, RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR,
-                      rt_tick_from_millisecond(500), &status) != RT_EOK)
+                      rt_tick_from_millisecond(5000), &status) != RT_EOK)
     {
         LOG_E("wait %d completed timeout 0x%08x,arg 0x%08x\n", cmd->cmd_code, HAL_SDMMC_GET_STA(hw_sdio), cmd->arg);
         cmd->err = -RT_ETIMEOUT;
         rt_hw_sdio_timeout_handle();
-        return;
+        return 0;
     }
 
     if (sdio->pkg == RT_NULL)
     {
         LOG_E("sdio->pkg NULL");
-        return;
+        return 0;
     }
 
     rci = HAL_SDMMC_GET_RCI(hw_sdio);
     if ((resp_type(cmd) == RESP_R1) || (resp_type(cmd) == RESP_R1B))
     {
+        int cont = 0;
         while (rci != cmd->cmd_code)
+        {
+            if (cont > 50)
+            {
+                LOG_E("rci error rci=0x%x,cmd->cmd_code=0x%x", rci, cmd->cmd_code);
+                rt_hw_sdio_timeout_handle();
+                return 1;
+            }
+            cont ++;
             rci = HAL_SDMMC_GET_RCI(hw_sdio);
+        }
+
     }
 
     //cmd->resp[0] = hw_sdio->resp1;
@@ -274,6 +297,7 @@ static void rthw_sdio_wait_completed(struct rthw_sdio *sdio)
         {
             cmd->err = -RT_ETIMEOUT;
             rt_hw_sdio_timeout_handle();
+            return 1;
         }
 
         if ((status & HW_SDIO_IT_DCRCFAIL) && (data != NULL))
@@ -285,6 +309,7 @@ static void rthw_sdio_wait_completed(struct rthw_sdio *sdio)
         {
             data->err = -RT_ETIMEOUT;
             rt_hw_sdio_timeout_handle();
+            return 1;
         }
 
         if (cmd->err == RT_EOK)
@@ -319,6 +344,7 @@ static void rthw_sdio_wait_completed(struct rthw_sdio *sdio)
             data->err = RT_EOK;
         LOG_D("sta %d:0x%08X [%08X %08X %08X %08X] tick %d\n", rci, status, cmd->resp[0], cmd->resp[1], cmd->resp[2], cmd->resp[3], rt_tick_get());
     }
+    return 0;
 }
 
 /**
@@ -446,6 +472,7 @@ static void rthw_sdio_send_command(struct rthw_sdio *sdio, struct sdio_pkg *pkg)
     struct rt_mmcsd_data *data = cmd->data;
     SD_TypeDef *hw_sdio = sdio->sdio_des.hw_sdio;
     rt_uint32_t reg_cmd;
+    int retry_left = 10; /* limit resend to at most 10 times */
 
     /* save pkg */
     sdio->pkg = pkg;
@@ -550,13 +577,21 @@ static void rthw_sdio_send_command(struct rthw_sdio *sdio, struct sdio_pkg *pkg)
     /* send cmd */
     //hw_sdio->arg = cmd->arg;
     //hw_sdio->cmd = reg_cmd;
+SET_CMD:
     HAL_SDMMC_SET_CMD(hw_sdio, cmd->cmd_code, reg_cmd, cmd->arg);
 
     /* wait completed */
-    rthw_sdio_wait_completed(sdio);
+    if (rthw_sdio_wait_completed(sdio))
+    {
+        if (retry_left-- > 0)
+            goto SET_CMD;
+        LOG_E("SDIO CMD %d retry limit(10) reached, arg=0x%08x", cmd->cmd_code, cmd->arg);
+        if (cmd->err == RT_EOK)
+            cmd->err = -RT_ERROR; /* mark as error if not already */
+    }
 
     /* Waiting for data to be sent to completion */
-    if (data != RT_NULL)
+    if ((data != RT_NULL) && (cmd->err == RT_EOK))
     {
         volatile rt_uint32_t count = SDIO_TX_RX_COMPLETE_TIMEOUT_LOOPS;
         //LOG_D("before data: 0x%08x\n",HAL_SDMMC_GET_STA(hw_sdio));
@@ -569,15 +604,25 @@ static void rthw_sdio_send_command(struct rthw_sdio *sdio, struct sdio_pkg *pkg)
             // open error and data end irq
             mask = HAL_SDMMC_GET_IRQ_MASK(hw_sdio);
             mask |= (HW_SDIO_IT_DATAEND | HW_SDIO_IT_CMDREND | HW_SDIO_ERRORS);
+            int irq_retry_left = 10; /* limit IRQ wait resend to at most 10 times */
+IRQ_MASK:
             HAL_SDMMC_SET_IRQ_MASK(hw_sdio, mask);
-            rthw_sdio_wait_completed(sdio);
+            if (rthw_sdio_wait_completed(sdio))
+            {
+                if (irq_retry_left-- > 0)
+                    goto IRQ_MASK;
+                LOG_E("SDIO DATA (WRITE) wait retry limit(10) reached, CMD %d arg=0x%08x", cmd->cmd_code, cmd->arg);
+                if (cmd->err == RT_EOK)
+                    cmd->err = -RT_ERROR;
+            }
         }
 #else
         if (data->flags & DATA_DIR_WRITE)
             dma_res = HAL_DMA_PollForTransfer(&sdio_obj.dma.handle_tx, HAL_DMA_FULL_TRANSFER, 1000);
         else if (data->flags & DATA_DIR_READ)
             dma_res = HAL_DMA_PollForTransfer(&sdio_obj.dma.handle_rx, HAL_DMA_FULL_TRANSFER, 1000);
-        RT_ASSERT(dma_res == HAL_OK);
+        if (HAL_OK != dma_res)
+            RT_ASSERT(0);
 #endif
         //LOG_D("after data: 0x%08x\n",HAL_SDMMC_GET_STA(hw_sdio));
         while (count && (HAL_SDMMC_GET_STA(hw_sdio) & (HW_SDIO_IT_TXACT)))
@@ -596,7 +641,8 @@ static void rthw_sdio_send_command(struct rthw_sdio *sdio, struct sdio_pkg *pkg)
     /* close irq, keep sdio irq ??? */
     //hw_sdio->mask = hw_sdio->mask & HW_SDIO_IT_SDIOIT ? HW_SDIO_IT_SDIOIT : 0x00;
     mask = HAL_SDMMC_GET_IRQ_MASK(hw_sdio);
-    mask = mask & HW_SDIO_IT_SDIOIT ? HW_SDIO_IT_SDIOIT : 0x00;
+    mask = mask & SD_IER_SDIO_MASK ? SD_IER_SDIO_MASK : 0x00000;
+
     HAL_SDMMC_SET_IRQ_MASK(hw_sdio, mask);
 
     //HAL_SDMMC_CLR_DATA_CTRL(hw_sdio);
@@ -660,9 +706,9 @@ static void rthw_sdio_request(struct rt_mmcsd_host *host, struct rt_mmcsd_req *r
 
             RT_ASSERT(size <= SDIO_BUFF_SIZE);
 
-            //pkg.buff = data->buf;
-            //if ((rt_uint32_t)data->buf & (SDIO_ALIGN_LEN - 1))
-            // replace buffer any way for SRAM buffer and aligned issue
+            pkg.buff = data->buf;
+            if (((rt_uint32_t)data->buf & (SDIO_ALIGN_LEN - 1)) && IS_DCACHED_RAM(data->buf))
+                // replace buffer any way for SRAM buffer and aligned issue
             {
                 SCB_InvalidateDCache_by_Addr(cache_buf, size);
                 pkg.buff = cache_buf;
@@ -675,8 +721,8 @@ static void rthw_sdio_request(struct rt_mmcsd_host *host, struct rt_mmcsd_req *r
 
         rthw_sdio_send_command(sdio, &pkg);
 
-        //if ((data != RT_NULL) && (data->flags & DATA_DIR_READ) && ((rt_uint32_t)data->buf & (SDIO_ALIGN_LEN - 1)))
-        if ((data != RT_NULL) && (data->flags & DATA_DIR_READ)) // always do copy when buffer replaced.
+        if ((data != RT_NULL) && (data->flags & DATA_DIR_READ) && ((rt_uint32_t)data->buf & (SDIO_ALIGN_LEN - 1)) && IS_DCACHED_RAM(data->buf))
+            //if ((data != RT_NULL) && (data->flags & DATA_DIR_READ)) // always do copy when buffer replaced.
         {
             memcpy(data->buf, cache_buf, data->blksize * data->blks);
         }
@@ -801,19 +847,21 @@ void rthw_sdio_irq_update(struct rt_mmcsd_host *host, rt_int32_t enable)
 
     if (enable)
     {
-        LOG_D("enable sdio irq");
+        LOG_D("enable sdio irq\n");
+        HAL_SDMMC_ENABLE_CEATA_MODE(hw_sdio, 1, 1);
         //hw_sdio->mask |= HW_SDIO_IT_SDIOIT;
         rt_uint32_t mask = HAL_SDMMC_GET_IRQ_MASK(hw_sdio);
-        mask |= HW_SDIO_IT_SDIOIT;
+        mask |= SD_IER_SDIO_MASK;
         HAL_SDMMC_SET_IRQ_MASK(hw_sdio, mask);
     }
     else
     {
-        LOG_D("disable sdio irq");
+        LOG_D("disable sdio irq\n");
         //hw_sdio->mask &= ~HW_SDIO_IT_SDIOIT;
         rt_uint32_t mask = HAL_SDMMC_GET_IRQ_MASK(hw_sdio);
-        mask &= ~HW_SDIO_IT_SDIOIT;
+        mask &= ~SD_IER_SDIO_MASK;
         HAL_SDMMC_SET_IRQ_MASK(hw_sdio, mask);
+        HAL_SDMMC_DISABLE_CEATA_MODE(hw_sdio);
     }
 }
 
@@ -898,8 +946,17 @@ void rthw_sdio_irq_process(struct rt_mmcsd_host *host)
         {
             //hw_sdio->icr = HW_SDIO_IT_DATAEND;
             HAL_SDMMC_CLR_INT(hw_sdio, HW_SDIO_IT_DATAEND);
+            rthw_sdio_irq_update(host, 1);
             complete = 1;
         }
+        if (intstatus & HW_SDIO_IT_STBITERR)
+        {
+            //hw_sdio->icr = HW_SDIO_IT_DATAEND;
+            //rt_kprintf("HW_SDIO_IT_STBITERR 0x%x,SR=0X%x\n",intstatus,hw_sdio->DCR);
+            HAL_SDMMC_CLR_INT(hw_sdio, HW_SDIO_IT_STBITERR);
+            complete = 1;
+        }
+
     }
 
     if ((intstatus & HW_SDIO_IT_SDIOIT) && (HAL_SDMMC_GET_IRQ_MASK(hw_sdio) & HW_SDIO_IT_SDIOIT))
@@ -908,6 +965,13 @@ void rthw_sdio_irq_process(struct rt_mmcsd_host *host)
         HAL_SDMMC_CLR_INT(hw_sdio, HW_SDIO_IT_SDIOIT);
         //sdio_irq_wakeup(host);
     }
+#if 1
+    if (intstatus & SD_SR_SDIO)//0x10000
+    {
+        HAL_SDMMC_CLR_INT(hw_sdio, SD_SR_SDIO);
+        sdio_irq_wakeup(host);
+    }
+#endif
 
     if (complete)
     {
@@ -1355,14 +1419,10 @@ static void rt_sdio_register_rt_device(void)
 int rt_hw_sdio_init(void)
 {
     struct sifli_sdio_des sdio_des;
-#if 0       // FIX ME: With read HW setting
-    {
-        rt_uint32_t tmpreg = 0x00U;
-        SET_BIT(RCC->AHB1ENR, sdio_config.dma_rx.dma_rcc);
-        /* Delay after an RCC peripheral clock enabling */
-        tmpreg = READ_BIT(RCC->AHB1ENR, sdio_config.dma_rx.dma_rcc);
-        UNUSED(tmpreg); /* To avoid compiler warnings */
-    }
+#ifdef SF32LB52X
+    HAL_RCC_EnableModule(RCC_MOD_SDMMC1);
+#else
+    HAL_RCC_EnableModule(RCC_MOD_SDMMC2);
 #endif
 
     sdio_des.clk_get = sifli_sdio_clock_get;

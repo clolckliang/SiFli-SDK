@@ -16,9 +16,8 @@
 
 #define SDCARD_INSTANCE_TYPE              SD_TypeDef
 //#define SDCARD_INSTANCE_TYPE              SD_TypeDef
-
-#define SDIO_BUFF_SIZE       4096
-#define SDIO_MAX_FREQ        24000000
+#define SDIO_BUFF_SIZE       64 * 1024
+#define SDIO_MAX_FREQ        (48* 1000 * 1000)
 #define SDIO_MIN_FREQ        400000
 #define SDIO_ALIGN_LEN       32
 
@@ -49,7 +48,7 @@
 #endif
 
 #ifndef SDIO_MAX_FREQ
-    #define SDIO_MAX_FREQ        (24 * 1000 * 1000)
+    #define SDIO_MAX_FREQ        (24* 1000 * 1000)
 #endif
 
 #define HW_SDIO_IT_CCRCFAIL                    (SD_IER_CMD_RSP_CRC_MASK)
@@ -61,7 +60,7 @@
 #define HW_SDIO_IT_CMDREND                     (SD_IER_CMD_DONE_MASK)
 #define HW_SDIO_IT_CMDSENT                     (SD_IER_CMD_SENT_MASK)
 #define HW_SDIO_IT_DATAEND                     (SD_IER_DATA_DONE_MASK)
-//#define HW_SDIO_IT_STBITERR                    (0x01U << 9)     //
+#define HW_SDIO_IT_STBITERR                    (0x01U << 9)     //
 //#define HW_SDIO_IT_DBCKEND                     (0x01U << 10)    //
 //#define HW_SDIO_IT_CMDACT                      (0x01U << 11)    //
 #define HW_SDIO_IT_TXACT                       (SD_SR_DATA_BUSY)    //
