@@ -238,16 +238,16 @@ typedef  void (*pRNG_RandReadyCallbackTypeDef)(RNG_HandleTypeDef *hrng, uint32_t
   * @param  \__HANDLE__: RNG Handle
   * @retval None
   */
-#define __HAL_RNG_ENABLE_IT(__HANDLE__) ((__HANDLE__)->Instance->IRQ |=  \
-        (TRNG_IRQ_PRNG_LOCKUP_MSK|TRNG_IRQ_RAND_NUM_AVAIL_MSK|TRNG_IRQ_SEED_GEN_DONE_MSK))
+#define __HAL_RNG_ENABLE_IT(__HANDLE__) ((__HANDLE__)->Instance->IRQ &= \
+        ~(TRNG_IRQ_PRNG_LOCKUP_MSK|TRNG_IRQ_RAND_NUM_AVAIL_MSK|TRNG_IRQ_SEED_GEN_DONE_MSK))
 
 /**
   * @brief  Disable the RNG interrupt.
   * @param  \__HANDLE__: RNG Handle
   * @retval None
   */
-#define __HAL_RNG_DISABLE_IT(__HANDLE__) ((__HANDLE__)->Instance->IRQ &= \
-        ~(TRNG_IRQ_PRNG_LOCKUP_MSK|TRNG_IRQ_RAND_NUM_AVAIL_MSK|TRNG_IRQ_SEED_GEN_DONE_MSK))
+#define __HAL_RNG_DISABLE_IT(__HANDLE__) ((__HANDLE__)->Instance->IRQ |=  \
+        (TRNG_IRQ_PRNG_LOCKUP_MSK|TRNG_IRQ_RAND_NUM_AVAIL_MSK|TRNG_IRQ_SEED_GEN_DONE_MSK))
 
 /**
   * @brief  Check whether the specified RNG interrupt has occurred or not.
