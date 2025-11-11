@@ -27,7 +27,7 @@ int main(void)
     audio_server_set_private_volume(AUDIO_TYPE_BT_MUSIC, DEFAULT_VOLUME);
     while (1)
     {
-        err = bap_broadcast_sink_start(0);
+        err = bap_broadcast_sink_start();
         if (err)
         {
             printk("start bap sink failed\n");
@@ -40,6 +40,12 @@ int main(void)
     return 0;
 }
 
+/*cmd help:
+ * audio_src 0    //stop
+ * audio_src 1    //start with stream 0
+ * audio_src 1 0  //start with stream 0
+ * audio_src 1 1  //start with stream 1
+ */
 void audio_src(int argc, char **argv)
 {
     if (argc < 2)
@@ -48,16 +54,24 @@ void audio_src(int argc, char **argv)
     if (argv[1][0] == '0')
     {
         bap_broadcast_sink_stop();
-        printk("\r\ninput audio_src 1 to start\n\n");
+        printk("\r\ninput audio_src 1 0 to start steram 0\n\n");
+        printk("\r\ninput audio_src 1 1 to start stream 1\n\n");
     }
     else
     {
-        bap_broadcast_sink_start(0);
+        int idx = 0;
+        if (argc >= 3 && argv[2][0] == '1')
+            idx = 1;
+        if (CONFIG_BT_BAP_BROADCAST_SNK_STREAM_COUNT == 1)
+        {
+            idx = 0;
+        }
+        bap_broadcast_sink_start(idx);
+
         printk("\r\ninput audio_src 0 to stop\n\n");
     }
 }
 MSH_CMD_EXPORT(audio_src, audio_src command)
-
 
 #if defined(SF32LB52X_58)|| (defined(SF32LB52X) && (defined(SF32LB52X_REV_B) || defined(SF32LB52X_REV_AUTO)))
 uint16_t g_em_offset[HAL_LCPU_CONFIG_EM_BUF_MAX_NUM] =
