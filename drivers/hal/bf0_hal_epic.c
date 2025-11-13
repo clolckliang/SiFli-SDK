@@ -3499,19 +3499,20 @@ static void EPIC_TransResultInit(EPIC_TransformResultDef *trans_result, const EP
 }
 
 #ifdef EPIC_SUPPORT_DITHER
-static void EPIC_ConfigDither(EPIC_HandleTypeDef *hepic, uint32_t dither_mask)
+static void EPIC_ConfigDither(EPIC_HandleTypeDef *hepic, uint32_t dither_mask, uint8_t dither_level)
 {
     EPIC_TypeDef *epic = hepic->Instance;
+    dither_level &= 0x3; //Make sure level is 0~3
 
-    if ((0 == (dither_mask & 0x00FFFFFF)) || (0 == hepic->dither_enable))
+    if ((0 == (dither_mask & 0x00FFFFFF)) || (0 == dither_level))
     {
         epic->DITHER_CONF &= ~ EPIC_DITHER_CONF_EN;
     }
     else
     {
-        uint32_t r_dither = (dither_mask >> 16) & 0xFF;
-        uint32_t g_dither = (dither_mask >> 8) & 0xFF;
-        uint32_t b_dither = (dither_mask >> 0) & 0xFF;
+        uint32_t r_dither = (dither_mask & 0xFF0000) >> (16 + (3 - dither_level));
+        uint32_t g_dither = (dither_mask & 0x00FF00) >> (8  + (3 - dither_level));
+        uint32_t b_dither = (dither_mask & 0x0000FF) >> (0  + (3 - dither_level));
 
         epic->DITHER_CONF = EPIC_DITHER_CONF_EN  | EPIC_DITHER_CONF_LFSR_LOAD | EPIC_DITHER_CONF_LFSR_LOAD_SEL_Msk
                             | MAKE_REG_VAL(r_dither, EPIC_DITHER_CONF_W_R_Msk, EPIC_DITHER_CONF_W_R_Pos)
@@ -5660,6 +5661,7 @@ static HAL_StatusTypeDef EPIC_ConfigBlendEx(EPIC_HandleTypeDef *epic,
     EPIC_BlendingDataType *output = &input[layer_num - 1];
 #ifdef EPIC_SUPPORT_DITHER
     uint32_t output_bit_mask, input_bit_mask = 0;
+    uint8_t layer_dither_level = 0;
 #endif /* EPIC_SUPPORT_DITHER */
 
     EPIC_PRINTF("\r\n EPIC_ConfigBlendEx \r\n");
@@ -5727,6 +5729,7 @@ static HAL_StatusTypeDef EPIC_ConfigBlendEx(EPIC_HandleTypeDef *epic,
         if (!IS_EZIP_COLOR_MODE(input[i].color_mode))
         {
             input_bit_mask |= EPIC_GetColorBitMask(input[i].color_mode, input[i].ax_mode);
+            layer_dither_level = HAL_MAX(layer_dither_level, input[i].dither_level);
         }
 #endif /* EPIC_SUPPORT_DITHER */
 
@@ -5758,7 +5761,7 @@ static HAL_StatusTypeDef EPIC_ConfigBlendEx(EPIC_HandleTypeDef *epic,
     }
 #endif
 #ifdef EPIC_SUPPORT_DITHER
-    EPIC_ConfigDither(epic, (input_bit_mask & (~output_bit_mask)));
+    EPIC_ConfigDither(epic, (input_bit_mask & (~output_bit_mask)), layer_dither_level);
 #endif /* EPIC_SUPPORT_DITHER */
 
     return ret;

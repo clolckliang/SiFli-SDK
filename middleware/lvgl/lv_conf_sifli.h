@@ -117,6 +117,13 @@
 
     #define LV_USE_GPU       LV_USE_GPU_SIFLI_EPIC
     #define LV_USE_DRAW_EPIC LV_USE_GPU_SIFLI_EPIC
+
+    /*
+    Enable dithering for YUV420 images when output format is RGB565
+    */
+    #if (16 == LV_COLOR_DEPTH)
+        #define EPIC_YUV420_DITHER_LEVEL_DEFAULT  EPIC_DITHER_LEVEL_MIDDLE
+    #endif /* LV_COLOR_DEPTH */
     /*=======================
     * FEATURE CONFIGURATION
     *=======================*/

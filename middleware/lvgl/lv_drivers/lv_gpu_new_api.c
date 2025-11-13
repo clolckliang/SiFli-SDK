@@ -391,6 +391,8 @@ static void setup_fg_layer(EPIC_LayerConfigTypeDef *p_fg_layer,
         p_fg_layer->yuv.y_buf = p_fg_layer->data;
         p_fg_layer->yuv.u_buf = p_fg_layer->yuv.y_buf + xres * yres;
         p_fg_layer->yuv.v_buf = p_fg_layer->yuv.u_buf + xres * yres / 4;
+
+        p_fg_layer->dither_level = EPIC_YUV420_DITHER_LEVEL_DEFAULT;
     }
     else if (LV_IMG_CF_YUV420_PLANAR2 == src->header.cf)
     {
@@ -398,6 +400,8 @@ static void setup_fg_layer(EPIC_LayerConfigTypeDef *p_fg_layer,
         p_fg_layer->yuv.y_buf = yuv[0];
         p_fg_layer->yuv.u_buf = yuv[1];
         p_fg_layer->yuv.v_buf = yuv[2];
+
+        p_fg_layer->dither_level = EPIC_YUV420_DITHER_LEVEL_DEFAULT;
     }
     else if ((LV_IMG_CF_YUV422_PACKED_YUYV == src->header.cf) || (LV_IMG_CF_YUV422_PACKED_UYVY == src->header.cf))
     {

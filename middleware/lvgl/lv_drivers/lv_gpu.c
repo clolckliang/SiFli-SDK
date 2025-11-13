@@ -372,6 +372,8 @@ void img_rotate_opa_frac2(lv_img_dsc_t *dest, lv_img_dsc_t *src, int16_t angle, 
         input_layers[1].yuv.y_buf = input_layers[1].data;
         input_layers[1].yuv.u_buf = input_layers[1].yuv.y_buf + xres * yres;
         input_layers[1].yuv.v_buf = input_layers[1].yuv.u_buf + xres * yres / 4;
+
+        input_layers[1].dither_level = EPIC_YUV420_DITHER_LEVEL_DEFAULT;
     }
     else if (LV_IMG_CF_YUV420_PLANAR2 == src->header.cf)
     {
@@ -379,6 +381,8 @@ void img_rotate_opa_frac2(lv_img_dsc_t *dest, lv_img_dsc_t *src, int16_t angle, 
         input_layers[1].yuv.y_buf = yuv[0];
         input_layers[1].yuv.u_buf = yuv[1];
         input_layers[1].yuv.v_buf = yuv[2];
+
+        input_layers[1].dither_level = EPIC_YUV420_DITHER_LEVEL_DEFAULT;
     }
     else if ((LV_IMG_CF_YUV422_PACKED_YUYV == src->header.cf) || (LV_IMG_CF_YUV422_PACKED_UYVY == src->header.cf))
     {
