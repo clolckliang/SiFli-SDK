@@ -55,7 +55,13 @@ DFU_DOWNLOAD_REGION是存放下载文件的空间，需要预留一次升级所�
 6. psram1_cbus添加DFU区域，tags填写为DFU_PSRAM_CODE
 ![ptab](./assets/ptab_525_2.png)
 ### Boot loader
-检查对应使用的boot loader的main.c有无以下选择running_imgs[CORE_HCPU]的逻辑，没有需要手动添加
+boot loader关于关于DFU跳转的修改，已经集成到了如下工程：\
+example/boot_loader/project/butterflmicro\
+example/boot_loader/project/sf32lb56x_v2\
+example/boot_loader/project/sf32lb58x_v2\
+如果有修改的需求，可以参照以上工程修改以下内容：
+
+增加选择running_imgs[CORE_LCPU]的逻辑，使用LCPU
 ![boot1](./assets/bootloader1.png)
  
 
@@ -64,6 +70,8 @@ DFU_DOWNLOAD_REGION是存放下载文件的空间，需要预留一次升级所�
 
 
 ### 主工程
+本example下的相关配置已配置好，无需修改\
+如果是其他工程想要使用本DFU功能，参照如下修改：\
 Kconfig.proj
 增加DFU开关
 ![main1](./assets/mainproject1.png)
@@ -153,3 +161,4 @@ board.conf中打开的内容，dfu工程也会编译，导致dfu工程编译一�
 |0.0.3 |03/2025 |增加对58x的支持 |
 |0.0.4 |04/2025 |增加http下载示例，调整目录结构和宏开关 |
 |0.0.5 |11/2025 |增加55x的升级适配 |
+|0.0.6 |11/2025 |更新一些过时内容 |
