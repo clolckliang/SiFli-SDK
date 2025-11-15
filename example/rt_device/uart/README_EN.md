@@ -2,6 +2,7 @@
 Source code path: example\rt_device\uart
 ## Supported Platforms
 The example can run on the following development boards:
+* sf32lb52-nano_a128n16
 * sf32lb52-lcd_n16r8
 * sf32lb58-lcd_n16r64n4
 ## Overview

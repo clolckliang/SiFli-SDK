@@ -2,6 +2,7 @@
 源码路径：example\rt_device\uart
 ## 支持的平台
 例程可以运行在以下开发板.
+* sf32lb52-nano_a128n16
 * sf32lb52-lcd_n16r8
 * sf32lb58-lcd_n16r64n4
 ## 概述

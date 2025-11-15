@@ -10,7 +10,7 @@
 #include "uart_config.h"
 #include "dma_config.h"
 
-#if defined(BSP_USING_BOARD_SF32LB52_LCD_N16R8)
+#if defined(BSP_USING_BOARD_SF32LB52_LCD_N16R8)  || (BSP_USING_BOARD_SF32LB52_NANO_A128R16) || (BSP_USING_BOARD_SF32LB52_NANO_N16R16)
     #define UART2_DMA_RX_IRQHandler          DMAC1_CH6_IRQHandler
 #elif defined (BSP_USING_BOARD_SF32LB58_LCD_N16R64N4)
     #define UART2_DMA_RX_IRQHandler          DMAC1_CH5_IRQHandler
@@ -247,6 +247,9 @@ int main(void)
 #elif defined (BSP_USING_BOARD_SF32LB56_LCD_N16R12N1)
     HAL_PIN_Set(PAD_PA36, USART2_RXD, PIN_PULLUP, 1);
     HAL_PIN_Set(PAD_PA37, USART2_TXD, PIN_PULLUP, 1);
+#elif defined(BSP_USING_BOARD_SF32LB52_NANO_A128R16) || (BSP_USING_BOARD_SF32LB52_NANO_N16R16)
+    HAL_PIN_Set(PAD_PA25, USART2_RXD, PIN_PULLUP, 1);
+    HAL_PIN_Set(PAD_PA28, USART2_TXD, PIN_PULLUP, 1);
 #endif
     /* 2, open uart2 clock source  */
     HAL_RCC_EnableModule(RCC_MOD_USART2);

@@ -3,6 +3,7 @@ Source code path: example/hal/uart
 
 ## Supported Platforms
 Examples can run on the following development boards:
+* sf32lb52-nano_a128n16
 * sf32lb52-lcd_n16r8
 * sf32lb58-lcd_n16r64n4
 * sf32lb56-lcd_n16r12n1
