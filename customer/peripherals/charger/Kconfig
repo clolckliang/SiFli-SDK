@@ -10,7 +10,11 @@ menuconfig BSP_USING_CHARGER
                 depends on SOC_SF32LB52X
                 bool "using SIFLI charge"
             config CHARGE_USING_SGM40561
-                bool "using charge sgm40561"             
+                bool "using charge sgm40561"
+            config CHARGE_USING_AW32001
+                bool "using charge aw32001"
+            config CHARGE_USING_SIMPLE_CHARGE
+                bool "using charge simple charge"              
         endchoice
         choice
             prompt "chargeing measure vbat adc mode"
