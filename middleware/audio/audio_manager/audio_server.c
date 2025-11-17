@@ -1374,6 +1374,7 @@ static void start_txrx(audio_device_speaker_t *my)
     LOG_I("wait rx start");
     rt_err_t got = rt_event_recv(my->event, 1, RT_EVENT_FLAG_OR | RT_EVENT_FLAG_CLEAR, 1000, NULL) ;
     LOG_I("got rx start %d", got);
+    rt_thread_mdelay(10);
 #else
     LOG_I("start txrx");
     int stream_audprc, stream_audcodec;

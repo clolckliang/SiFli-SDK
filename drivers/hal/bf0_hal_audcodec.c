@@ -1116,6 +1116,7 @@ __HAL_ROM_USED HAL_StatusTypeDef HAL_AUDCODEC_Mute_DACPath(AUDCODEC_HandleTypeDe
 
     if (mute)
     {
+        HAL_AUDCODEC_Config_DACPath(hacodec, 1);
         fine_vol_0 = GET_REG_VAL(hacodec->Instance_hp->DAC_CH0_CFG, AUDCODEC_HP_DAC_CH0_CFG_FINE_VOL_Msk, AUDCODEC_HP_DAC_CH0_CFG_FINE_VOL_Pos);
         fine_vol_1 = GET_REG_VAL(hacodec->Instance_hp->DAC_CH1_CFG, AUDCODEC_HP_DAC_CH1_CFG_FINE_VOL_Msk, AUDCODEC_HP_DAC_CH1_CFG_FINE_VOL_Pos);
         MODIFY_REG(hacodec->Instance_hp->DAC_CH0_CFG,  AUDCODEC_HP_DAC_CH0_CFG_FINE_VOL_Msk, \
@@ -1125,6 +1126,7 @@ __HAL_ROM_USED HAL_StatusTypeDef HAL_AUDCODEC_Mute_DACPath(AUDCODEC_HandleTypeDe
     }
     else
     {
+        HAL_AUDCODEC_Config_DACPath(hacodec, 0);
         MODIFY_REG(hacodec->Instance_hp->DAC_CH0_CFG,  AUDCODEC_HP_DAC_CH0_CFG_FINE_VOL_Msk, \
                    MAKE_REG_VAL(fine_vol_0, AUDCODEC_HP_DAC_CH0_CFG_FINE_VOL_Msk, AUDCODEC_HP_DAC_CH0_CFG_FINE_VOL_Pos));
         MODIFY_REG(hacodec->Instance_hp->DAC_CH1_CFG,  AUDCODEC_HP_DAC_CH1_CFG_FINE_VOL_Msk, \
