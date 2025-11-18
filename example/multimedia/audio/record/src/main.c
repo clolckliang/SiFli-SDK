@@ -52,6 +52,8 @@ INIT_ENV_EXPORT(mnt_init);
 #define MIC_RECORD_FILE "/mic16k.pcm"
 #define AUDIO_WRITE_CACHE_SIZE (4096)
 #define AUDIO_READ_CACHE_SIZE  (2048)
+static uint8_t file_mem[160000];
+static int g_file_mem_offset = 0;
 
 /* Semaphore used to wait aes interrupt. */
 static rt_sem_t g_audio_sem;
@@ -87,8 +89,19 @@ static int audio_callback_record(audio_server_callback_cmt_t cmd, void *callback
         audio_server_coming_data_t *p = (audio_server_coming_data_t *)reserved;
         /* pcm data left shift 4 bits to increase volume. */
         auido_gain_pcm((int16_t *)p->data, p->data_len, 4);
-        /* save recording pcm data to file. */
-        wr_len = write(fd, p->data, p->data_len);
+        /* save recording pcm data to memory buffer. */
+        if (g_file_mem_offset + p->data_len <= sizeof(file_mem))
+        {
+            memcpy(&file_mem[g_file_mem_offset], p->data, p->data_len);
+            wr_len = p->data_len;
+            g_file_mem_offset += wr_len;
+        }
+        else
+        {
+            rt_kprintf("[RECORD]%s buffer full! offset:%d, data_len:%d\n", __func__, g_file_mem_offset, p->data_len);
+            wr_len = 0;
+        }
+        //wr_len = write(fd, p->data, p->data_len);
         // rt_kprintf("[RECORD]%s recording save %d bytes.\n", __func__, wr_len);
     }
 
@@ -105,6 +118,9 @@ static void start_recording(void)
 
     int fd;
     audio_parameter_t param = {0};
+
+    /* Reset memory buffer offset. */
+    g_file_mem_offset = 0;
 
     /* audio parameters. */
     param.write_bits_per_sample = 16;
@@ -126,7 +142,7 @@ static void start_recording(void)
     RT_ASSERT(client);
 
     /* Recording for 10 seconds.  */
-    rt_thread_mdelay(10000);
+    rt_thread_mdelay(5000);
 
     rt_kprintf("[RECORD]close audio client.\n");
     /* Stop recording. */
@@ -137,29 +153,36 @@ static void start_recording(void)
 
 /**
  * @brief Audio callback function for recording play.
- *        Read from file.
+ *        Read from memory buffer.
  */
 static int audio_callback_play(audio_server_callback_cmt_t cmd, void *callback_userdata, uint32_t reserved)
 {
-    int fd = (int)callback_userdata;
     int rd_len = 0;
     int wr_len = 0;
     static uint8_t read_finish = 0;
+    int read_size = AUDIO_WRITE_CACHE_SIZE / 2;
 
     rt_kprintf("[RECORD]%s cmd: %d\n", __func__, cmd);
+    //读数组内存，送数据
     if (cmd == as_callback_cmd_cache_half_empty || cmd == as_callback_cmd_cache_empty)
     {
-        if (fd >= 0 && s_pcm && g_client)
+        if (s_pcm && g_client)
         {
-            lseek(fd, g_pcm_file_offset, SEEK_SET);
-            rd_len = read(fd, (void *)s_pcm, (AUDIO_WRITE_CACHE_SIZE / 2));
-            if (rd_len <= 0)
+            /* Check if there's more data to read from memory buffer. */
+            if (g_pcm_file_offset >= g_file_mem_offset)
             {
                 read_finish = 1;
-                rt_kprintf("[RECORD]%s read finish. read len: %d offset:%d\n", __func__, rd_len, g_pcm_file_offset);
+                rt_kprintf("[RECORD]%s read finish. offset:%d, total:%d\n", __func__, g_pcm_file_offset, g_file_mem_offset);
             }
             else
             {
+                /* Calculate how much data we can read. */
+                int remaining = g_file_mem_offset - g_pcm_file_offset;
+                rd_len = (remaining < read_size) ? remaining : read_size;
+
+                /* Read data from memory buffer. */
+                memcpy((void *)s_pcm, &file_mem[g_pcm_file_offset], rd_len);
+
                 wr_len = audio_write(g_client, (uint8_t *)s_pcm, rd_len);
                 g_pcm_file_offset += wr_len;
                 // rt_kprintf("%s audio write %d bytes. \n", __func__, wr_len);
@@ -170,7 +193,7 @@ static int audio_callback_play(audio_server_callback_cmt_t cmd, void *callback_u
     if (cmd == as_callback_cmd_cache_empty && read_finish)
     {
         /* Notify to exit playing. */
-        rt_kprintf("[RECORD]%s ready to exit play.\n", __func__, rd_len);
+        rt_kprintf("[RECORD]%s ready to exit play.\n", __func__);
         rt_sem_release(g_audio_sem);
     }
 
@@ -179,21 +202,15 @@ static int audio_callback_play(audio_server_callback_cmt_t cmd, void *callback_u
 
 /**
  * @brief Example for recording play.
- *        Read from pcm file and play.
+ *        Read from memory buffer and play.
  */
 static void recording_play(void)
 {
     rt_kprintf("[RECORD]%s\n", __func__);
 
-    /* Open recording pcm file. */
-    int fd = -1;
-    fd = open(MIC_RECORD_FILE, O_RDONLY | O_BINARY);
-    RT_ASSERT(fd >= 0);
-
-    /* Get pcm file size. */
-    int size = lseek(fd, 0, SEEK_END);
-    lseek(fd, 0, SEEK_SET);
-    rt_kprintf("[RECORD]%s size %d.\n", MIC_RECORD_FILE, size);
+    /* Reset read offset. */
+    g_pcm_file_offset = 0;
+    rt_kprintf("[RECORD]memory buffer size %d bytes.\n", g_file_mem_offset);
 
     /* audio parameters. */
     audio_parameter_t param = {0};
@@ -206,18 +223,24 @@ static void recording_play(void)
     param.read_samplerate = 16000;  /* 16k sampling rate. */
     param.read_cache_size = AUDIO_READ_CACHE_SIZE;   /* read cache size */
     /* Open audio client. */
-    g_client = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TX, &param, audio_callback_play, (void *)fd);
+    g_client = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TX, &param, audio_callback_play, NULL);
     RT_ASSERT(g_client >= 0);
 
-    /* Read data from pcm file.
+    /* Read data from memory buffer.
      * Read AUDIO_WRITE_CACHE_SIZE for the first time, then read in half afterward.
      */
     rt_kprintf("[RECORD]audio write %d bytes. \n", AUDIO_WRITE_CACHE_SIZE);
     s_pcm = (uint16_t *)rt_malloc(AUDIO_WRITE_CACHE_SIZE);
     RT_ASSERT(s_pcm);
-    read(fd, (void *)s_pcm, AUDIO_WRITE_CACHE_SIZE);
-    int wr_len = audio_write(g_client, (uint8_t *)s_pcm, AUDIO_WRITE_CACHE_SIZE);
-    g_pcm_file_offset += wr_len;
+
+    /* Read first chunk from memory buffer. */
+    int read_size = (g_file_mem_offset < AUDIO_WRITE_CACHE_SIZE) ? g_file_mem_offset : AUDIO_WRITE_CACHE_SIZE;
+    if (read_size > 0)
+    {
+        memcpy((void *)s_pcm, file_mem, read_size);
+        int wr_len = audio_write(g_client, (uint8_t *)s_pcm, read_size);
+        g_pcm_file_offset += wr_len;
+    }
 
     /* Wait for playback to complete. */
     rt_sem_take(g_audio_sem, RT_WAITING_FOREVER);
@@ -225,8 +248,6 @@ static void recording_play(void)
     /* Close audio client. */
     rt_kprintf("[RECORD]close audio client.\n");
     audio_close(g_client);
-    close(fd);
-    unlink(MIC_RECORD_FILE);
     free(s_pcm);
 }
 
