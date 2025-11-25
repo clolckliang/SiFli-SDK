@@ -330,16 +330,29 @@ void boot_images_help()
 // dfu_pan logical program： 
         if(DFU_PAN_LOADER_START_ADDR != DFU_PAN_FLASH_UNINIT_32 && DFU_PAN_LOADER_SIZE != DFU_PAN_FLASH_UNINIT_32)
         {
+            
             bool needs_update = 0;
-            for (int i = 0; i < MAX_VERSION_FILES; i++) {
+            for (int i = 0; i < MAX_VERSION_FILES; i++) 
+            {
                 uint32_t needs_update_addr = VERSION_INFO_BASE_ADDR + i * VERSION_INFO_SIZE + NEEDS_UPDATE_OFFSET;
-                
+                uint32_t magic_addr = VERSION_INFO_BASE_ADDR + i * VERSION_INFO_SIZE + NEEDS_MAGIC_OFFSET;
                 uint32_t needs_update_value = 0;
-                int result = g_flash_read(needs_update_addr, (const int8_t*)&needs_update_value, sizeof(uint32_t));
-                
-                if (result == sizeof(uint32_t) && needs_update_value) {
-                    needs_update = 1;
-                    break;
+                 // Check the magic number first.
+                uint32_t magic_value = 0;
+                int magic_result = g_flash_read(magic_addr, (const int8_t*)&magic_value, sizeof(uint32_t));
+
+                // Verify whether the magic number is correct.
+                if (magic_result == sizeof(uint32_t) && magic_value == VERSION_MAGIC_DFU_PAN)
+                {
+                    
+                    uint32_t needs_update_value = 0;
+                    int result = g_flash_read(needs_update_addr, (const int8_t*)&needs_update_value, sizeof(uint32_t));
+                    
+                    if (result == sizeof(uint32_t) && needs_update_value) 
+                    {
+                        needs_update = 1;
+                        break;
+                    }
                 }
             }
             if (needs_update) 

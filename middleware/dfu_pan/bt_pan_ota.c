@@ -396,10 +396,14 @@ int dfu_pan_query_versions(const char* server_url, const char* current_version)
                         temp_version_list[version_count].zippath, zippath,
                         sizeof(temp_version_list[version_count].zippath) - 1);
                 }
+                // Set the magic number
+                temp_version_list[version_count].magic = VERSION_MAGIC_DFU_PAN;
 
                 LOG_I("Found version--- %d: ", version_count);
                 LOG_I("name: %s\n", temp_version_list[version_count].name);
                 rt_kputs(temp_version_list[version_count].zippath);
+                LOG_I("Magic: %s\n",(temp_version_list[version_count].magic == VERSION_MAGIC_DFU_PAN)
+                ? "Valid": "Invalid");
                 LOG_I("---\n");
 
                 version_count++;
@@ -999,12 +1003,8 @@ void dfu_pan_clear_update_flags(void)
     LOG_I("Clearing all update flags...\n");
     struct version_info temp_version_files[MAX_VERSION_COUNT];
     
-    // Set the update flag for all fields to 0
-    for (int i = 0; i < MAX_VERSION_COUNT; i++) {
-        memset(&temp_version_files[i], 0, sizeof(struct version_info));
-        temp_version_files[i].needs_update = 0;
-        LOG_I("  Clear entry %d needs_update = 0", i);
-    }
+    // Initialize the entire array to 0 and clear all version information.
+    memset(temp_version_files, 0, sizeof(temp_version_files));
 
     int erase_alignment = rt_flash_get_erase_alignment(VERSION_INFO_BASE_ADDR_FROM_MACRO);
     int aligned_size = ((sizeof(struct version_info) * MAX_VERSION_COUNT +
@@ -1138,6 +1138,7 @@ void dfu_pan_test_update_flags(void)
             LOG_E("  Entry %d: read failed (addr: 0x%08x)", i, needs_update_addr);
         }
     }
-    
+    // Clear all update information
+    dfu_pan_clear_update_flags();
     LOG_I("=== OTA Update Flags Test Complete ===\n");
 }

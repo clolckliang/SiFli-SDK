@@ -27,11 +27,16 @@
 // Define the number of supported version files
 #define MAX_VERSION_FILES 5
 
+#define VERSION_INFO_MAGIC 0x64667500  // The ASCII value of "dfu", using 0x64667500 to ensure 4-byte alignment
+#define VERSION_INFO_MAGIC_PAN 0x70616E00  // The ASCII value of "pan", using 0x70616E00 to ensure 4-byte alignment
+#define VERSION_MAGIC_DFU_PAN ((uint32_t)VERSION_INFO_MAGIC << 16 | (VERSION_INFO_MAGIC_PAN & 0xFFFF))
+
 // Store version information
 struct version_info {
     char name[32];             
     char zippath[256];          
-    uint32_t needs_update;         
+    uint32_t needs_update;
+    uint32_t magic;         
 };
 
 // Automatically calculate the size of version_info structure
@@ -39,5 +44,5 @@ struct version_info {
 
 // Calculate offset of needs_update field using offsetof macro
 #define NEEDS_UPDATE_OFFSET offsetof(struct version_info, needs_update)
-
+#define NEEDS_MAGIC_OFFSET offsetof(struct version_info, magic)
 #endif

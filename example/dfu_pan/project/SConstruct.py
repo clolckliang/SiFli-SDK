@@ -13,12 +13,10 @@ def create_env(proj_path = None):
         lcpu_proj_name = 'lcpu'
         AddChildProj(lcpu_proj_name, lcpu_proj_path, True, core="LCPU")
     else:
-        print("Please AddLCPU to set environment.\n")
         AddLCPU(SIFLI_SDK, rtconfig.CHIP)
 
 
     if proj_path is None:
-        print("Please AddBootLoader to set environment.\n")
         AddBootLoader(SIFLI_SDK, rtconfig.CHIP)
 
     # Set default compile options

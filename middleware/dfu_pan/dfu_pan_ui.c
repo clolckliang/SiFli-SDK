@@ -331,7 +331,7 @@ rt_err_t ota_ui_obj_init(float scale)
     lv_obj_set_y(ui_prolabel, (int)(-74 * scale));
     lv_obj_set_align(ui_prolabel, LV_ALIGN_CENTER);
     lv_obj_add_style(ui_prolabel, &style, 0);
-    lv_label_set_text(ui_prolabel, "100%");
+    lv_label_set_text(ui_prolabel, "0%");
     lv_obj_set_style_text_font(Update_sign, &ota_font, 0);
 
     ui_status = lv_label_create(ui_Screen1);
@@ -341,7 +341,7 @@ rt_err_t ota_ui_obj_init(float scale)
     lv_obj_set_y(ui_status, (int)(49 * scale));
     lv_obj_set_align(ui_status, LV_ALIGN_CENTER);
     lv_obj_add_style(ui_status, &style, 0);
-    lv_label_set_text(ui_status, "下载中...");
+    lv_label_set_text(ui_status, "连接网络后点击列表");
     lv_obj_set_style_text_font(ui_status, &ota_font, 0);
 
     completion_popup = lv_obj_create(lv_screen_active());
