@@ -755,6 +755,24 @@ int HAL_NAND_CHECK_ECC(NAND_ECC_MODE_T mode, int value, uint32_t *errcode)
             break;
         }
         break;
+    case BIT2_IN_C0_T4:     // 2 bits in c0,
+        switch (valid)
+        {
+        case 0:
+            res = 0;
+            break;
+        case 1:
+        case 2:
+        case 3:
+            res = 0;
+            *errcode |= valid;
+            break;
+        default:
+            res = valid;
+            *errcode |= valid;
+            break;
+        }
+        break;
     default:    // not support any more
         break;
     }

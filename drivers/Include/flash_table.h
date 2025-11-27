@@ -26,12 +26,13 @@
 typedef enum __NAND_ECC_STATUS_MODE_
 {
     BIT2_IN_C0_T1 = 0,   // int reg c0, bit 4 and bit 5, b00 no error; b01 1-bit been corrected; others more than 1 bit and can not correct
-    BIT2_IN_C0_T2 = 1, // 2 bits in c0, bit 4 and 5, b00 no error; b01/b03 has error but corrected; b02 has error can not recorrected, and may have ext infor in other reg
-    BIT3_IN_C0_T1 = 2, // 3 bits in c0, bit 4,5,6; 0 no err; 1,3,5 has err but corrected, 2 more than 8 bite err no correct, others reseved
-    BIT3_IN_C0_T2 = 3, // 3 bits in c0, bit 4,5,6; 0 no err; 7 has err but can not corrected, others has error but corrected
+    BIT2_IN_C0_T2 = 1,   // 2 bits in c0, bit 4 and 5, b00 no error; b01/b03 has error but corrected; b02 has error can not recorrected, and may have ext infor in other reg
+    BIT3_IN_C0_T1 = 2,   // 3 bits in c0, bit 4,5,6; 0 no err; 1,3,5 has err but corrected, 2 more than 8 bite err no correct, others reseved
+    BIT3_IN_C0_T2 = 3,   // 3 bits in c0, bit 4,5,6; 0 no err; 7 has err but can not corrected, others has error but corrected
     BIT4_IN_C0_T1 = 4,   // 4 bits in c0, 0 no error; xx10b err can not corrected; others other corrected
     BIT4_IN_C0_T2 = 5,   // 4 bits in c0, 0 no error;  error bit = bit value, max to 8; error when larger than 8
-    BIT2_IN_C0_T3 = 6   // 2 bits in c0, bit 4 and bit 5, b00 no error; b01 1~2 bit corrected; b10 3~6 bit corrected; b11 not corrected
+    BIT2_IN_C0_T3 = 6,   // 2 bits in c0, bit 4 and bit 5, b00 no error; b01 1~2 bit corrected; b10 3~6 bit corrected; b11 not corrected
+    BIT2_IN_C0_T4 = 7    // 2 bits in c0, bit 4 and bit 5, b00 no error; b01 1~2 bit corrected; b10 3~4 bit corrected; b11 5~6 bit corrected
 } NAND_ECC_MODE_T;
 
 typedef struct FLASH_FULL_CHIP_ID
@@ -66,8 +67,8 @@ extern FT_CONST SPI_FLASH_FACT_CFG_T nand_cmd_table_list[];
 extern FT_CONST FLASH_RDID_TYPE_T   *FT_CONST nand_cmd_id_pool[];
 
 #if defined(JLINK) || defined(KEIL)
-    void spi_nor_table_init(void);
-    void spi_nand_table_init(void);
+void spi_nor_table_init(void);
+void spi_nand_table_init(void);
 #endif /* JLINK || KEIL */
 
 #endif  // _SIF_FLASH_CMD_TABLE_H__
