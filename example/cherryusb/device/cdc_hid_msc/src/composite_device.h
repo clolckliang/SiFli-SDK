@@ -20,15 +20,6 @@ extern "C" {
 #define USBD_MAX_POWER     100
 #define USBD_LANGID_STRING 1033
 
-/* HID Modifier Keys */
-#define HID_MODIFIER_LCTRL  0x01
-#define HID_MODIFIER_LSHIFT 0x02
-#define HID_MODIFIER_LALT   0x04
-#define HID_MODIFIER_LGUI   0x08
-#define HID_MODIFIER_RCTRL  0x10
-#define HID_MODIFIER_RSHIFT 0x20
-#define HID_MODIFIER_RALT   0x40
-#define HID_MODIFIER_RGUI   0x80
 
 /* Function declarations */
 
