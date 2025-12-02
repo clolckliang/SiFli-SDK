@@ -85,6 +85,7 @@ typedef struct
 struct mp3ctrl_t
 {
     uint32_t        magic;
+    audio_device_e  use_device;
     sifli_resample_t *resample;
     audio_type_t    type;
     HMP3Decoder     handle;
@@ -927,7 +928,7 @@ look_write_result:
                 ctrl->frameinfo.samplerate = mp3FrameInfo.samprate;
                 ctrl->frameinfo.channels = mp3FrameInfo.nChans;
                 ctrl->frameinfo.one_channel_sampels = mp3FrameInfo.outputSamps / mp3FrameInfo.nChans;
-                ctrl->client = audio_open(ctrl->type, AUDIO_TX, &pa, mp3_audio_server_callback, (void *)ctrl);
+                ctrl->client = audio_open2(ctrl->type, AUDIO_TX, &pa, mp3_audio_server_callback, (void *)ctrl, ctrl->use_device);
                 RT_ASSERT(ctrl->client);
 #if PKG_USING_VBE_DRC
                 if (!ctrl->vbe)
@@ -1353,7 +1354,7 @@ check_write_result:
             ctrl->frameinfo.samplerate = ctrl->wave_samplerate;
             ctrl->frameinfo.channels = old_channels;
             ctrl->frameinfo.one_channel_sampels = WAV_FRAME_SIZE / 2 / old_channels;
-            ctrl->client = audio_open(ctrl->type, AUDIO_TX, &pa, mp3_audio_server_callback, (void *)ctrl);
+            ctrl->client = audio_open2(ctrl->type, AUDIO_TX, &pa, mp3_audio_server_callback, (void *)ctrl, ctrl->use_device);
             RT_ASSERT(ctrl->client);
             LOG_I("wav open ctrl=0x%x, client=0x%x, c=%d samrate=%d",
                   ctrl, ctrl->client, ctrl->wave_channels, ctrl->wave_samplerate);
@@ -1518,7 +1519,8 @@ static mp3ctrl_handle mp3ctrl_open_real(audio_type_t type,
                                         const char *filename,
                                         uint32_t len,
                                         audio_server_callback_func callback,
-                                        void *callback_userdata)
+                                        void *callback_userdata,
+                                        audio_device_e want_use_device)
 {
     MP3FrameInfo frameinfo;
     uint32_t     file_size;
@@ -1537,6 +1539,7 @@ static mp3ctrl_handle mp3ctrl_open_real(audio_type_t type,
     }
     mp3ctrl_handle handle = audio_mem_calloc(1, sizeof(struct mp3ctrl_t));
     RT_ASSERT(handle);
+    handle->use_device = want_use_device;
     handle->last_display_seconds = -1;
     handle->is_file = (len == -1);
 #if RT_USING_DFS
@@ -1656,16 +1659,38 @@ PUBLIC_API mp3ctrl_handle mp3ctrl_open(audio_type_t type,
 {
     LOG_I("%s call by thread id=%p name=%s", __FUNCTION__, rt_thread_self(), rt_thread_self()->name);
 
-    return mp3ctrl_open_real(type, filename, -1, callback, callback_userdata);
+    return mp3ctrl_open_real(type, filename, -1, callback, callback_userdata, AUDIO_DEVICE_AUTO);
 }
+
+PUBLIC_API mp3ctrl_handle mp3ctrl_open2(audio_type_t type,
+                                        const char *filename,
+                                        audio_server_callback_func callback,
+                                        void *callback_userdata,
+                                        audio_device_e only_use_device)
+{
+    LOG_I("%s call by thread id=%p name=%s", __FUNCTION__, rt_thread_self(), rt_thread_self()->name);
+    return mp3ctrl_open_real(type, filename, -1, callback, callback_userdata, only_use_device);
+}
+
 PUBLIC_API mp3ctrl_handle mp3ctrl_open_buffer(audio_type_t type,
         const char *buf,
         uint32_t buf_len,
         audio_server_callback_func callback,
         void *callback_userdata)
 {
-    return mp3ctrl_open_real(type, buf, buf_len, callback, callback_userdata);
+    return mp3ctrl_open_real(type, buf, buf_len, callback, callback_userdata, AUDIO_DEVICE_AUTO);
 }
+
+PUBLIC_API mp3ctrl_handle mp3ctrl_open_buffer2(audio_type_t type,
+        const char *buf,
+        uint32_t buf_len,
+        audio_server_callback_func callback,
+        void *callback_userdata,
+        audio_device_e only_use_device)
+{
+    return mp3ctrl_open_real(type, buf, buf_len, callback, callback_userdata, only_use_device);
+}
+
 PUBLIC_API int mp3ctrl_close(mp3ctrl_handle handle)
 {
     rt_uint32_t evt;

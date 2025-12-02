@@ -50,7 +50,9 @@ open:
             (uint32_t)callback_userdata is current play time in seconds
 */
 mp3ctrl_handle mp3ctrl_open(audio_type_t type, const char *filename, audio_server_callback_func callback, void *callback_userdata);
+mp3ctrl_handle mp3ctrl_open2(audio_type_t type, const char *filename, audio_server_callback_func callback, void *callback_userdata, audio_device_e only_use_device);
 mp3ctrl_handle mp3ctrl_open_buffer(audio_type_t type, const char *buf, uint32_t buf_len, audio_server_callback_func callback, void *callback_userdata);
+mp3ctrl_handle mp3ctrl_open_buffer2(audio_type_t type, const char *buf, uint32_t buf_len, audio_server_callback_func callback, void *callback_userdata, audio_device_e only_use_device);
 /**
     cmd:
       MP3CTRL_IOCTRL_LOOP_TIMES
