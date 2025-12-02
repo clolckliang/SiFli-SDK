@@ -332,17 +332,17 @@ void boot_images_help()
         {
             
             bool needs_update = 0;
-            for (int i = 0; i < MAX_VERSION_FILES; i++) 
+            for (int i = 0; i < MAX_FIRMWARE_FILES; i++) 
             {
-                uint32_t needs_update_addr = VERSION_INFO_BASE_ADDR + i * VERSION_INFO_SIZE + NEEDS_UPDATE_OFFSET;
-                uint32_t magic_addr = VERSION_INFO_BASE_ADDR + i * VERSION_INFO_SIZE + NEEDS_MAGIC_OFFSET;
+                uint32_t needs_update_addr = FIRMWARE_INFO_BASE_ADDR + i * FIRMWARE_INFO_SIZE + NEEDS_UPDATE_OFFSET;
+                uint32_t magic_addr = FIRMWARE_INFO_BASE_ADDR + i * FIRMWARE_INFO_SIZE + NEEDS_MAGIC_OFFSET;
                 uint32_t needs_update_value = 0;
                  // Check the magic number first.
                 uint32_t magic_value = 0;
                 int magic_result = g_flash_read(magic_addr, (const int8_t*)&magic_value, sizeof(uint32_t));
 
                 // Verify whether the magic number is correct.
-                if (magic_result == sizeof(uint32_t) && magic_value == VERSION_MAGIC_DFU_PAN)
+                if (magic_result == sizeof(uint32_t) && magic_value == FIRMWARE_MAGIC_DFU_PAN) 
                 {
                     
                     uint32_t needs_update_value = 0;
