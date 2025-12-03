@@ -36,7 +36,7 @@ static struct SVInfo_t
     uint8_t NumBytesHelloSent;  // 发送hello info计数
     int ChannelID;
 
-    uint32_t NumBytesTxBuf;     //TX buffer total bytes
+    unsigned NumBytesTxBuf;     //TX buffer total bytes
 } _SVInfo;
 /**
  * @brief This function starts and initializes a SystemView session
