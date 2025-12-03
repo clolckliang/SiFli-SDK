@@ -919,15 +919,15 @@ class SiFliSDKTool(object):
 
     def get_preferred_installed_version(self) -> Optional[str]:
         """
-        Get the preferred installed version of the tool. If more versions installed, return the highest.
+        Get the preferred installed version of the tool. Prefer recommended versions, otherwise
+        use the newest installed version compatible with the current platform.
         """
-        recommended_versions = [k for k in self.versions_installed
-                                if self.versions[k].status == SiFliSDKToolVersion.STATUS_RECOMMENDED
-                                and self.versions[k].compatible_with_platform(self._platform)]
-        assert len(recommended_versions) <= 1
-        if recommended_versions:
-            return recommended_versions[0]
-        return None
+        compatible_installed = [k for k in self.versions_installed
+                                if self.versions[k].compatible_with_platform(self._platform)]
+        if not compatible_installed:
+            return None
+        compatible_installed_sorted = sorted(compatible_installed, key=self.versions.get, reverse=True)  # type: ignore
+        return compatible_installed_sorted[0]
 
     def find_installed_versions(self) -> None:
         """
@@ -1934,23 +1934,6 @@ def action_check(args):  # type: ignore
 
 
 # The following function is used in process_tool which is a part of the action_export.
-def handle_recommended_version_to_use(
-    tool: SiFliSDKTool,
-    tool_name: str,
-    version_to_use: str,
-    prefer_system_hint: str,
-) -> Tuple[list, dict]:
-    """
-    If there is unsupported tools version in PATH, prints info about that.
-    """
-    tool_export_paths = tool.get_export_paths(version_to_use)
-    tool_export_vars = tool.get_export_vars(version_to_use)
-    if tool.version_in_path and tool.version_in_path not in tool.versions:
-        info(f'Not using an unsupported version of tool {tool.name} found in PATH: {tool.version_in_path}.' + prefer_system_hint, f=sys.stderr)
-    return tool_export_paths, tool_export_vars
-
-
-# The following function is used in process_tool which is a part of the action_export.
 def handle_supported_or_deprecated_version(tool: SiFliSDKTool, tool_name: str) -> None:
     """
     Prints info if supported, but not recommended or deprecated version of the tool is used.
@@ -1963,6 +1946,40 @@ def handle_supported_or_deprecated_version(tool: SiFliSDKTool, tool_name: str) -
              f=sys.stderr)
     elif version_obj.status == SiFliSDKToolVersion.STATUS_DEPRECATED:
         warn(f'using a deprecated version of tool {tool_name} found in PATH: {tool.version_in_path}')
+
+
+def warn_if_not_recommended(tool: SiFliSDKTool, tool_name: str, version_to_use: str) -> None:
+    """
+    Warn if a version other than the recommended one is being used.
+    """
+    version_obj = tool.versions.get(version_to_use)
+    if not version_obj:
+        return
+    recommended_version = tool.get_recommended_version()
+    if version_obj.status == SiFliSDKToolVersion.STATUS_SUPPORTED:
+        info(f'Using a supported version of tool {tool_name}: {version_to_use}.', f=sys.stderr)
+        if recommended_version and recommended_version != version_to_use:
+            info(f'However the recommended version is {recommended_version}.', f=sys.stderr)
+    elif version_obj.status == SiFliSDKToolVersion.STATUS_DEPRECATED:
+        warn(f'using a deprecated version of tool {tool_name}: {version_to_use}')
+
+
+# The following function is used in process_tool which is a part of the action_export.
+def handle_version_to_use(
+    tool: SiFliSDKTool,
+    tool_name: str,
+    version_to_use: str,
+    prefer_system_hint: str,
+) -> Tuple[list, dict]:
+    """
+    Prepare export paths/vars for the selected installed version and emit warnings when needed.
+    """
+    tool_export_paths = tool.get_export_paths(version_to_use)
+    tool_export_vars = tool.get_export_vars(version_to_use)
+    warn_if_not_recommended(tool, tool_name, version_to_use)
+    if tool.version_in_path and tool.version_in_path not in tool.versions:
+        info(f'Not using an unsupported version of tool {tool.name} found in PATH: {tool.version_in_path}.' + prefer_system_hint, f=sys.stderr)
+    return tool_export_paths, tool_export_vars
 
 
 # The following function is used in process_tool which is a part of the action_export.
@@ -2010,15 +2027,16 @@ def process_tool(
         tool.find_installed_versions()
     except ToolBinaryError:
         pass
-    recommended_version_to_use = tool.get_preferred_installed_version()
+    selected_version_to_use = tool.get_preferred_installed_version()
 
-    if not tool.is_executable and recommended_version_to_use:
-        tool_export_vars = tool.get_export_vars(recommended_version_to_use)
+    if not tool.is_executable and selected_version_to_use:
+        warn_if_not_recommended(tool, tool_name, selected_version_to_use)
+        tool_export_vars = tool.get_export_vars(selected_version_to_use)
         return tool_export_paths, tool_export_vars, tool_found
 
-    if recommended_version_to_use and not args.prefer_system:
-        tool_export_paths, tool_export_vars = handle_recommended_version_to_use(
-            tool, tool_name, recommended_version_to_use, prefer_system_hint
+    if selected_version_to_use and not args.prefer_system:
+        tool_export_paths, tool_export_vars = handle_version_to_use(
+            tool, tool_name, selected_version_to_use, prefer_system_hint
         )
         return tool_export_paths, tool_export_vars, tool_found
 
