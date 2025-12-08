@@ -25,6 +25,7 @@ pyyaml
 tqdm
 tomli_w
 conan
+semantic_version
 cryptography
 json5
 crccheck
