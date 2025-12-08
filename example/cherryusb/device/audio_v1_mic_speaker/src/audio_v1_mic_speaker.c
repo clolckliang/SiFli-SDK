@@ -393,7 +393,10 @@ static int audio_callback_mic(audio_server_callback_cmt_t cmd,
 }
 
 static int audio_callback_speaker(audio_server_callback_cmt_t cmd,
-                                  void *callback_userdata, uint32_t reserved) {}
+                                  void *callback_userdata, uint32_t reserved)
+{
+    return 0;
+}
 
 void usbd_audio_open(uint8_t busid, uint8_t intf)
 {
