@@ -11,6 +11,26 @@ Under the RT-Thread operating system, two modes are set: one is the screen-off m
 
 > Note: Mode switching can only be successful during the wake-up phase. Mode switching during the sleep phase will not take effect.
 
+* Data Summary (using 200mAh battery capacity as an example)
+
+**Screen-off Mode**
+
+|          |Screen-on during Wake-up  |Screen-off Sleep      |Daily Consumption      |Usable Days |
+|:---      |:---                     |:---                  |:---                  |:---        |
+|100 times/day|1.73mAh              |1.18mAh              |2.91mAh              |68.7 days   |
+|300 times/day|5.20mAh              |1.17mAh              |6.37mAh              |31.4 days   |
+|500 times/day|8.65mAh              |1.16mAh              |8.65mAh              |23.1 days   |
+|**Average Power Consumption in Two Modes**|**Low Power Mode:** 49.06uA |**Working Mode:** 12.48mA  | | |
+
+**Always-on Screen Mode**
+
+|          |Screen-on during Wake-up  |Screen-off Sleep      |Daily Consumption      |Usable Days |
+|:---      |:---                     |:---                  |:---                  |:---        |
+|100 times/day|1.73mAh              |136mAh               |137.73mAh            |1.45 days   |
+|300 times/day|5.20mAh              |134.43mAh            |139.63mAh            |1.43 days   |
+|500 times/day|8.65mAh              |132.85mAh            |141.5mAh             |1.41 days   |
+|**Average Power Consumption in Two Modes**|**Low Power Mode:** 5.7mA |**Working Mode:** 12.38mA  | | |
+
 ### Mode Introduction
 * Three screen modes
 
@@ -176,9 +196,9 @@ msh />msh />[529475] I/drv.lcd lcd_task: idle mode on=1
 ![alt text](assets/lcd_on_wakeup_ppk.png)
 
 * Power consumption per day
-    100 times: 12.48*100*5/3600 = 1.73 (mAh)
-    300 times: 12.48*300*5/3600 = 5.2 (mAh) 
-    500 times: 12.48*500*5/3600 = 8.65 (mAh)
+   - 100 times: 12.48*100*5/3600 = 1.73 (mAh)
+   - 300 times: 12.48*300*5/3600 = 5.2 (mAh) 
+   - 500 times: 12.48*500*5/3600 = 8.65 (mAh)
 
 2. Screen-off sleep (used to simulate standby state)
 * Quiescent current in screen-off sleep mode: 49.06uA
@@ -188,16 +208,11 @@ msh />msh />[529475] I/drv.lcd lcd_task: idle mode on=1
     49.6/1000*1=0.0496 (mAh)
 
 * Total daily consumption calculated as:
-    100 times: 0.0496 * (24 * 3600 - 100 * 5) + 1.73 = 2.91 (mAh)  
-    300 times: 0.0496 * (24 * 3600 - 300 * 5) + 5.20 = 6.37 (mAh)
-    500 times: 0.0496 * (24 * 3600 - 500 * 5) + 8.65 = 9.81 (mAh)
+   - 100 times: 0.0496 * (24 * 3600 - 100 * 5) + 1.73 = 2.91 (mAh)  
+   - 300 times: 0.0496 * (24 * 3600 - 300 * 5) + 5.20 = 6.37 (mAh)
+   - 500 times: 0.0496 * (24 * 3600 - 500 * 5) + 8.65 = 9.81 (mAh)
 
-3. Data Summary
-|          | Screen-on when awakened | Screen-off sleep | Daily consumption | Usable days |
-|:---      |:---        |:---          |:---           |:---         |
-|100 times/day|1.73mAh     |1.18mAh       |2.91mAh        |68.7 days       |
-|300 times/day|5.20mAh     |1.17mAh       |6.37mAh        |31.4 days       |
-|500 times/day|8.65mAh     |1.16mAh       |8.65mAh        |23.1 days       |
+
 
 ### Always-on Screen Mode
 
@@ -206,9 +221,9 @@ msh />msh />[529475] I/drv.lcd lcd_task: idle mode on=1
 ![alt text](assets/lcd_wakeup_ppk.png)
 
 * Power consumption during usage
-    100 times: 12.48*100*5/3600 = 1.73 (mAh)
-    300 times: 12.48*300*5/3600 = 5.2 (mAh)
-    500 times: 12.48*500*5/3600 = 8.65 (mAh)
+   - 100 times: 12.48*100*5/3600 = 1.73 (mAh)
+   - 300 times: 12.48*300*5/3600 = 5.2 (mAh)
+   - 500 times: 12.48*500*5/3600 = 8.65 (mAh)
 
 2. Always-on screen sleep (used to simulate always-on screen standby state)
 * Quiescent current in always-on screen sleep mode: 5.7mA
@@ -217,16 +232,10 @@ msh />msh />[529475] I/drv.lcd lcd_task: idle mode on=1
     5.7*1=5.7 (mAh)
 
 * Daily consumption
-    100 times: 5.7*(24*3600-100*5) + 1.73 = 137.73 (mAh)
-    300 times: 5.7*(24*3600-300*5) + 5.20 = 139.63 (mAh)
-    500 times: 5.7*(24*3600-500*5) + 8.65 = 141.5 (mAh)
+   - 100 times: 5.7*(24*3600-100*5) + 1.73 = 137.73 (mAh)
+   - 300 times: 5.7*(24*3600-300*5) + 5.20 = 139.63 (mAh)
+   - 500 times: 5.7*(24*3600-500*5) + 8.65 = 141.5 (mAh)
 
-3. Data Summary
-|          | Screen-on when awakened | Screen-off sleep | Daily consumption | Usable days |
-|:---      |:---        |:---          |:---           |:---         |
-|100 times/day|1.73mAh     |136mAh       |137.73mAh       |1.45 days       |
-|300 times/day|5.20mAh     |134.43mAh    |139.63mAh       |1.43 days       |
-|500 times/day|8.65mAh     |132.85mAh    |141.5mAh        |1.41 days       |
 
 ## Abnormal Diagnosis
 If the measured results differ significantly from those in the document, there may be abnormalities. Please conduct troubleshooting on your own.
