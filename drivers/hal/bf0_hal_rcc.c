@@ -2409,7 +2409,7 @@ void HAL_RCC_Init(void)
 
 #if defined(SF32LB52X)
     HAL_RCC_HCPU_DeepWFIClockSelect(true, RCC_SYSCLK_HRC48);
-    HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 0);
+    HAL_RCC_HCPU_SetDeepWFIDiv(12, 0, 1);
 
     /* select RC48 as clock source, RC48 has been calibrated */
     HAL_RCC_HCPU_ClockSelect(RCC_CLK_MOD_HP_PERI, RCC_CLK_PERI_HRC48);
@@ -2434,6 +2434,10 @@ void HAL_RCC_HCPU_SetDeepWFIDiv(int8_t div, int8_t pdiv1, int8_t pdiv2)
     }
     if (pdiv1 >= 0)
     {
+        if (0 == pdiv2)
+        {
+            pdiv2 = 1;//The hardware requirements cannot be zero.
+        }
         mask |= HPSYS_RCC_DWCFGR_PDIV1_Msk;
         reg |= MAKE_REG_VAL(pdiv1, HPSYS_RCC_DWCFGR_PDIV1_Msk, HPSYS_RCC_CFGR_PDIV1_Pos);
     }
