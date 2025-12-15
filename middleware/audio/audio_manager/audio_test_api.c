@@ -44,6 +44,8 @@ static int g_bg_playing_fd;
 #define TEST_E_R        (1 << 4)
 #define TEST_E_STOP     (1 << 5)
 
+#define WRITE_CACHE_SIZE (8192)
+
 #define TEST_EVENT_ALL  (TEST_E_1K | TEST_E_0 | TEST_E_FILE | TEST_E_R_P | TEST_E_R | TEST_E_STOP)
 
 static void record_play(void);
@@ -253,7 +255,7 @@ static void write_1k()
         steps++;
         steps = steps % g_samplerate;
     }
-    int ret = audio_write(g_client, (uint8_t *)g_pcm, 320);
+    int ret = audio_write(g_client, (uint8_t *)g_pcm, WRITE_CACHE_SIZE / 2);
 }
 
 static int callback_1k(audio_server_callback_cmt_t cmd, void *callback_userdata, uint32_t reserved)
@@ -271,32 +273,21 @@ static void playing_1k(void)
     pa.write_channnel_num = 1;
     pa.read_bits_per_sample = 16;
     pa.read_channnel_num = 1;
+    pa.write_cache_size = WRITE_CACHE_SIZE;
 
     if (g_samplerate == 16000)
     {
         pa.write_samplerate = 16000;
         pa.read_samplerate = 16000;
-        pa.read_cache_size = 4;
-        pa.write_cache_size = 4096;
     }
     else
     {
         pa.write_samplerate = 44100;
         pa.read_samplerate = 44100;
-        pa.read_cache_size = 4;
-        pa.write_cache_size = 4096 * 4;
     }
 
     steps = 0;
     g_client = audio_open(AUDIO_TYPE_BT_MUSIC, AUDIO_TX, &pa, callback_1k, NULL);
-    write_1k();
-    write_1k();
-    write_1k();
-    write_1k();
-    write_1k();
-    write_1k();
-    write_1k();
-    write_1k();
 }
 
 static void audio_thread_test(void *p)
@@ -392,8 +383,8 @@ static int audio_callback_play(audio_server_callback_cmt_t cmd, void *callback_u
     {
         if (fd >= 0 && g_client)
         {
-            read(fd, (void *)g_pcm, 2048);
-            int writted = audio_write(g_client, (uint8_t *)g_pcm, 2048);
+            read(fd, (void *)g_pcm, WRITE_CACHE_SIZE / 2);
+            int writted = audio_write(g_client, (uint8_t *)g_pcm, WRITE_CACHE_SIZE / 2);
         }
     }
     return 0;
@@ -409,8 +400,7 @@ static void record_play(void)
     pa.read_bits_per_sample = 16;
     pa.read_channnel_num = 1;
     pa.read_samplerate = 16000;
-    pa.read_cache_size = 2048;
-    pa.write_cache_size = 2048;
+    pa.write_cache_size = WRITE_CACHE_SIZE;
     fd = open(FILE_RECORD, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
     RT_ASSERT(fd >= 0);
     g_fd = fd;
@@ -427,14 +417,12 @@ static void record_play(void)
     g_fd = -1;
 
     //play now
-    pa.write_cache_size = 4096;
+    pa.write_cache_size = WRITE_CACHE_SIZE;
     fd = open(FILE_RECORD, O_RDONLY | O_BINARY);
     RT_ASSERT(fd >= 0);
 
     g_client = audio_open(AUDIO_TYPE_LOCAL_MUSIC, AUDIO_TX, &pa, audio_callback_play, (void *)fd);
     RT_ASSERT(g_client >= 0);
-    read(fd, (void *)g_pcm, 4096);
-    audio_write(g_client, (uint8_t *)g_pcm, 4096);
     record_seconds = 0;
     while (record_seconds < RECORD_TIME_SECOND)
     {
@@ -462,10 +450,10 @@ static int audio_callback_record_start(audio_server_callback_cmt_t cmd, void *ca
     {
         if (g_bg_playing_fd >= 0 && g_client)
         {
-            int bytes = read(g_bg_playing_fd, (void *)g_pcm, 2048);
-            if (bytes > 0)
+            int bytes = read(g_bg_playing_fd, (void *)g_pcm, WRITE_CACHE_SIZE / 2);
+            if (bytes == WRITE_CACHE_SIZE / 2)
             {
-                audio_write(g_client, (uint8_t *)g_pcm, 2048);
+                audio_write(g_client, (uint8_t *)g_pcm, WRITE_CACHE_SIZE / 2);
             }
         }
     }
@@ -484,8 +472,7 @@ static void record_start(void)
     pa.read_bits_per_sample = 16;
     pa.read_channnel_num = 1;
     pa.read_samplerate = 16000;
-    pa.read_cache_size = 2048;
-    pa.write_cache_size = 2048;
+    pa.write_cache_size = WRITE_CACHE_SIZE;
     if (!g_dump)
     {
         fd = open(FILE_RECORD, O_RDWR | O_CREAT | O_TRUNC | O_BINARY);
