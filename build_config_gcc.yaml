@@ -218,7 +218,12 @@ common_projects:
     boards: *devkit_lcd_boards
 
   - path: example/hal/hash/project
-    boards: *devkit_lcd_boards
+    boards: 
+      - sf32lb52-lcd_n16r8 
+      - sf32lb52-nano_a128r16
+      - sf32lb52-nano_n16r16
+      - sf32lb56-lcd_a128r12n1
+      - sf32lb56-lcd_n16r12n1
   
   - path: example/hal/hwtimer/project
     boards: *devkit_lcd_boards
@@ -410,7 +415,7 @@ common_projects:
     boards: *devkit_lcd_boards
 
   - path: example/rt_device/pwm/pwm_dma/project
-    boards: *devkit_lcd_boards
+    boards: *525_devkit_lcd_boards
 
   - path: example/rt_device/rgb_led/project
     boards: *devkit_lcd_boards
@@ -419,10 +424,10 @@ common_projects:
     boards: *devkit_lcd_boards
 
   - path: example/rt_device/spi/card/project
-    boards: *devkit_lcd_boards
+    boards: *525_devkit_lcd_boards
 
   - path: example/rt_device/spi_tf/project
-    boards: *devkit_lcd_boards
+    boards: *525_devkit_lcd_boards
 
   - path: example/rt_device/uart/project
     boards: *devkit_lcd_boards
