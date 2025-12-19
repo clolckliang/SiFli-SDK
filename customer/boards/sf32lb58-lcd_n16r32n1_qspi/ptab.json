@@ -48,7 +48,7 @@
             {
                 "offset": "0x00000000",
                 "max_size": "0x00080000",
-                "tags": [""],
+                "tags": [],
                 "ftab": {
                     "name": "dfu",
                     "address": [
@@ -73,7 +73,7 @@
                 "offset": "0x00000000", 
                 "max_size": "0x00400000", 
                 "tags": [
-                    "HCPU_FLASH_CODE"
+                    "HCPU_PSRAM_CODE"
                 ],
                 "exec": "main"
             },
@@ -109,7 +109,7 @@
                 "offset": "0x00000000", 
                 "max_size": "0x00400000", 
                 "tags": [
-                    "HCPU_FLASH_CODE_LOAD_REGION"
+                    "HCPU_FLASH_CODE"
                 ], 
                 "img": "main",
                 "ftab": {
