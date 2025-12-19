@@ -24,16 +24,6 @@ static void button_event_handler(int32_t pin, button_action_t action)
 
 int main(void)
 {
-#if defined(BSP_USING_BOARD_SF32LB52_LCD_N16R8)
-    HAL_PIN_Set(PAD_PA34, GPIO_A34, PIN_PULLDOWN, 1);
-    HAL_PIN_Set(PAD_PA11, GPIO_A11, PIN_PULLDOWN, 1);
-#elif defined (BSP_USING_BOARD_SF32LB58_LCD_N16R64N4)
-    HAL_PIN_Set(PAD_PB56, GPIO_B56, PIN_PULLDOWN, 1);
-    HAL_PIN_Set(PAD_PB54, GPIO_B54, PIN_PULLDOWN, 1);
-#elif defined (BSP_USING_BOARD_SF32LB52_NANO_A128R16) || (BSP_USING_BOARD_SF32LB52_NANO_N16R16)
-    HAL_PIN_Set(PAD_PA34, GPIO_A34, PIN_PULLDOWN, 1);
-    HAL_PIN_Set(PAD_PA33, GPIO_A33, PIN_PULLDOWN, 1);
-#endif
     /*
     587 board PB pin needs to add 96
     54+96->150
@@ -42,13 +32,7 @@ int main(void)
 
     button_cfg_t cfg;
 
-#if defined(BSP_USING_BOARD_SF32LB52_LCD_N16R8)
-    cfg.pin = 34;
-#elif defined (BSP_USING_BOARD_SF32LB58_LCD_N16R64N4)
-    cfg.pin = 152;
-#elif defined (BSP_USING_BOARD_SF32LB52_NANO_A128R16) || (BSP_USING_BOARD_SF32LB52_NANO_N16R16)
-    cfg.pin = 34;
-#endif
+    cfg.pin = BSP_KEY1_PIN;
     cfg.active_state = BUTTON_ACTIVE_HIGH;
     cfg.mode = PIN_MODE_INPUT;
     cfg.button_handler = button_event_handler;
@@ -56,13 +40,7 @@ int main(void)
     RT_ASSERT(id >= 0);
     RT_ASSERT(SF_EOK == button_enable(id));
 
-#if defined(BSP_USING_BOARD_SF32LB52_LCD_N16R8)
-    cfg.pin = 11;
-#elif defined (BSP_USING_BOARD_SF32LB58_LCD_N16R64N4)
-    cfg.pin = 150;
-#elif defined (BSP_USING_BOARD_SF32LB52_NANO_A128R16) || (BSP_USING_BOARD_SF32LB52_NANO_N16R16)
-    cfg.pin = 33;
-#endif
+    cfg.pin = BSP_KEY2_PIN;
     cfg.active_state = BUTTON_ACTIVE_HIGH;
     cfg.mode = PIN_MODE_INPUT;
     cfg.button_handler = button_event_handler;

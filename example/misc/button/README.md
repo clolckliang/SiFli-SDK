@@ -61,6 +61,8 @@ button52
 ![button52](./assets/button_Schematic_52.png)
 button587
 ![button587](./assets/button_Schematic_587.png)
+button56
+![button587](./assets/button_Schematic_56.png)
 
 
 #### button配置流程
@@ -71,14 +73,10 @@ static void button_event_handler(int32_t pin, button_action_t action)
 }
 
 
+// Initialization button
+    button_cfg_t cfg;
 
-button_cfg_t cfg;
-
-#if defined(BSP_USING_BOARD_EM_LB525XXX)
-    cfg.pin = 34;
-#elif defined (BSP_USING_BOARD_EM_LB587XXX)
-    cfg.pin = 152;
-#endif
+    cfg.pin = BSP_KEY1_PIN;
     cfg.active_state = BUTTON_ACTIVE_HIGH;
     cfg.mode = PIN_MODE_INPUT;
     cfg.button_handler = button_event_handler;
@@ -87,11 +85,7 @@ button_cfg_t cfg;
     RT_ASSERT(SF_EOK == button_enable(id));
 
 
-#if defined(BSP_USING_BOARD_EM_LB525XXX)
-    cfg.pin = 11;
-#elif defined (BSP_USING_BOARD_EM_LB587XXX)
-    cfg.pin = 150;
-#endif
+    cfg.pin = BSP_KEY2_PIN;
     cfg.active_state = BUTTON_ACTIVE_HIGH;
     cfg.mode = PIN_MODE_INPUT;
     cfg.button_handler = button_event_handler;
@@ -99,19 +93,7 @@ button_cfg_t cfg;
     RT_ASSERT(id >= 0);
     RT_ASSERT(SF_EOK == button_enable(id));
 ```
-#### 按键引脚参数修改
-
-```c
-#if defined(BSP_USING_BOARD_EM_LB525XXX)
-    HAL_PIN_Set(PAD_PA34, GPIO_A34, PIN_PULLDOWN, 1);
-    HAL_PIN_Set(PAD_PA11, GPIO_A11, PIN_PULLDOWN, 1);
-#elif defined (BSP_USING_BOARD_EM_LB587XXX)
-    HAL_PIN_Set(PAD_PB56, GPIO_B56, PIN_PULLDOWN, 1);
-    HAL_PIN_Set(PAD_PB54, GPIO_B54, PIN_PULLDOWN, 1);
-#endif
-
-```
-
+*  注意 `BSP_KEY1_PIN` 和 `BSP_KEY2_PIN` 的引脚号来自于编译使用的开发版下的 `board.conf` 配置，如`sf32lb52-lcd_n16r8`，我们可以`sf32lb52-lcd_n16r8/hcpu/board.conf`文件中查看
 #### 例程输出结果展示:
 ![Serial](./assets/button_Serial_print.png)
 * log输出:
