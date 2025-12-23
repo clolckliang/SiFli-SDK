@@ -4,7 +4,10 @@
 
 ## 支持的开发板
 例程可以运行在以下开发板.
-* sf32lb52-lcd_n16r8
+*sf32lb52-nano系列
+* sf32lb52-lcd
+* sf32lb56-lcd
+* sf32lb56-lcd
 
 
 **注意：** 一般而言，例程都是运行芯片的HCPU，"eh-lb563_v2" 等效于"eh-lb563_v2_hcpu"，如果想在LCPU运行例程，可以使用"eh-lb563_v2_lcpu"。目前USB功能暂时只支持在HCPU上运行。
@@ -78,7 +81,7 @@ menuconfig --board=sf32lb52-lcd_n16r8
 
 ### 编译和烧录
 按照以下步骤，可以完成编译和烧录。
-
+需要根据板子挂载的flash颗粒型号来选择project下nand还是nor来进行编译和烧录。
 ```
 scons --board=sf32lb52-lcd_n16r8
 
