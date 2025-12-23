@@ -19,6 +19,8 @@
 #define CONFIG_USB_DFS_MOUNT_POINT "/"
 #endif
 
+typedef rt_size_t rt_ssize_t;
+
 static rt_err_t rt_udisk_init(rt_device_t dev)
 {
     struct usbh_msc *msc_class = (struct usbh_msc *)dev->user_data;
@@ -144,7 +146,11 @@ static void usbh_msc_thread(CONFIG_USB_OSAL_THREAD_SET_ARGV)
         rt_kprintf("udisk: %s mount failed, ret = %d\n", name, ret);
     }
 
-    usb_osal_thread_delete(NULL);
+    /* NOTE: usb_osal_thread_delete(NULL) causes system crash for unknown reason.
+     * Simply returning from the thread function also achieves thread self-deletion,
+     * so we skip the explicit delete call here.
+     */
+    // usb_osal_thread_delete(NULL);
 }
 
 void usbh_msc_run(struct usbh_msc *msc_class)
