@@ -1118,6 +1118,12 @@ int camera_start_dma(SPI_HandleTypeDef *hspi, uint8_t *buffer, uint32_t size)
 
     __HAL_SPI_DISABLE_IT(hspi, (SPI_IT_TXE | SPI_IT_RXNE | SPI_IT_ERR));
 
+    /* Set BIDIOE=0 to enable receive mode in 1-line bidirectional SPI */
+    if (hspi->Init.Direction == SPI_DIRECTION_1LINE)
+    {
+        SPI_1LINE_RX(hspi);
+    }
+
     /*Init field not used in handle to zero */
     hspi->RxISR       = NULL;
     hspi->TxISR       = NULL;
