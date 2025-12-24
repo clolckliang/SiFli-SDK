@@ -736,12 +736,14 @@ RT_WEAK void rt_hw_board_init()
     if (__HAL_SYSCFG_GET_REVID() < 2)
     {
         rt_kprintf("Wrong board is used!! It's SF32LB58 A1 chip revision, please use board with A1 chip revision!\n");
+        rt_kprintf("Please enable LCPU_CONFIG_AUTO and ensure LCPU_CONFIG_V2 is not enabled in BOTH HCPU and LCPU config!\n");
         RT_ASSERT(0);
     }
 #else
     if (__HAL_SYSCFG_GET_REVID() >= 2)
     {
         rt_kprintf("Wrong board is used!! It's SF32LB58 A2 chip revision, please don't use board with A1 chip revision!\n");
+        rt_kprintf("Please enable LCPU_CONFIG_V2 and ensure LCPU_CONFIG_AUTO is not enabled in BOTH HCPU and LCPU config!\n");
         RT_ASSERT(0);
     }
 #endif /* LCPU_CONFIG_V2 */
