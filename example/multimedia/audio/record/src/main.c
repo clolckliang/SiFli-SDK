@@ -141,7 +141,7 @@ static void start_recording(void)
     audio_client_t client = audio_open(AUDIO_TYPE_LOCAL_RECORD, AUDIO_RX, &param, audio_callback_record, (void *)fd);
     RT_ASSERT(client);
 
-    /* Recording for 10 seconds.  */
+    /* Recording for 5 seconds.  */
     rt_thread_mdelay(5000);
 
     rt_kprintf("[RECORD]close audio client.\n");
@@ -190,7 +190,7 @@ static int audio_callback_play(audio_server_callback_cmt_t cmd, void *callback_u
         }
     }
 
-    if (cmd == as_callback_cmd_cache_empty && read_finish)
+    if (read_finish)
     {
         /* Notify to exit playing. */
         rt_kprintf("[RECORD]%s ready to exit play.\n", __func__);
@@ -244,6 +244,9 @@ static void recording_play(void)
 
     /* Wait for playback to complete. */
     rt_sem_take(g_audio_sem, RT_WAITING_FOREVER);
+    uint32_t cache_ms = 0;
+    audio_ioctl(g_client, AUDIO_IOCTL_FLUSH_TIME_MS, &cache_ms);
+    rt_thread_mdelay(cache_ms);
 
     /* Close audio client. */
     rt_kprintf("[RECORD]close audio client.\n");
