@@ -161,7 +161,7 @@ enum
 /*------------------   define ----------------------*/
 #define m_max(a, b)  ((a) > (b) ? (a ): (b))
 
-#if defined(SOFTWARE_TX_MIX_ENABLE) || defined(AUDIO_RX_USING_I2S)
+#if defined(SOFTWARE_TX_MIX_ENABLE) || defined(AUDIO_RX_USING_I2S) || defined(AUDIO_TX_USING_I2S)
     #define TX_DMA_SIZE         (CODEC_DATA_UNIT_LEN)
 #else
     #define TX_DMA_SIZE         (CODEC_DATA_UNIT_LEN * 5)
@@ -1754,6 +1754,8 @@ static int audio_device_speaker_close(void *user_data)
             rt_device_control(my->i2s, AUDIO_CTL_STOP, &stream);
             stream = AUDIO_STREAM_RECORD;
             rt_device_control(my->i2s, AUDIO_CTL_STOP, &stream);
+            rt_device_close(my->i2s);
+            my->i2s = NULL;
         }
         if (my->pdm)
         {
@@ -1783,9 +1785,10 @@ static int audio_device_speaker_close(void *user_data)
             bf0_disable_pll();
             rt_device_close(my->audcodec_dev);
             rt_device_close(my->audprc_dev);
+            my->audcodec_dev = NULL;
+            my->audprc_dev = NULL;
         }
-        my->audcodec_dev = NULL;
-        my->audprc_dev = NULL;
+
 #if START_RX_IN_TX_INTERUPT
         rt_event_delete(my->event);
         my->event = NULL;
@@ -2082,7 +2085,7 @@ static void device_print_current_client(audio_device_ctrl_t *device)
     rt_list_for_each(pos, &get_server()->suspend_client_list)
     {
         c = rt_list_entry(pos, struct audio_client_base_t, node);
-        LOG_I("suspend: h=%x name=%s type=%d  rw=%d device_s=%d device_u=%d prio=%d", c, c->name, c->audio_type,
+        LOG_I("suspend: h=%x name=%s type=%d  rw=%d device_s=%d device_u=%d prio=%d", c, c->name, c->audio_type, c->rw_flag,
               c->device_specified, c->device_using, mix_policy[c->audio_type].priority);
     }
     LOG_I("device %d info end", device->device_type);
@@ -3687,11 +3690,11 @@ AUDIO_API int audio_ioctl(audio_client_t handle, int cmd, void *parameter)
         return -1;
     }
     LOG_I("audio_ioctl: cmd=%d", cmd);
-    if (cmd == 0)
+    if (cmd == AUDIO_IOCTL_FACTORY_LOOPBACK_GAIN)
     {
         handle->is_factory_loopback = gain | 0x80;
     }
-    else if (cmd == 1)
+    else if (cmd == AUDIO_IOCTL_FLUSH_TIME_MS)
     {
         uint32_t *time_ms = (uint32_t *)parameter;
         ret = -1;
@@ -3700,12 +3703,12 @@ AUDIO_API int audio_ioctl(audio_client_t handle, int cmd, void *parameter)
             uint32_t bytes_per_second = handle->parameter.write_samplerate * handle->parameter.write_channnel_num * 2;
             if (bytes_per_second)
             {
-                *time_ms = rt_ringbuffer_data_len(&handle->ring_buf)  * 1000 / bytes_per_second;
+                *time_ms = rt_ringbuffer_data_len(&handle->ring_buf) * 1000 / bytes_per_second;
                 ret = 0;
             }
         }
     }
-    else if (cmd == 2)
+    else if (cmd == AUDIO_IOCTL_IS_FADE_OUT_DONE)
     {
 #if !SOFTWARE_TX_MIX_ENABLE
         ret = -1;
@@ -3715,7 +3718,17 @@ AUDIO_API int audio_ioctl(audio_client_t handle, int cmd, void *parameter)
         }
 #endif
     }
-    else if (cmd == -1)
+    else if (cmd == AUDIO_IOCTL_BYTES_IN_CACHE)
+    {
+        uint32_t *byte_left = (uint32_t *)parameter;
+        ret = -1;
+        if (parameter)
+        {
+            *byte_left = rt_ringbuffer_data_len(&handle->ring_buf);
+            ret = 0;
+        }
+    }
+    else if (cmd == AUDIO_IOCTL_FADE_OUT_START)
     {
 #if !SOFTWARE_TX_MIX_ENABLE
         lock();
@@ -3729,7 +3742,16 @@ AUDIO_API int audio_ioctl(audio_client_t handle, int cmd, void *parameter)
         unlock();
 #endif
     }
-    LOG_I("audio_ioctl: cmd=%d ret=%d", cmd, ret);
+    else if (cmd == AUDIO_IOCTL_ENABLE_CPU_LOW_SPEED)
+    {
+        uint32_t enable = (uint32_t)parameter;
+        LOG_I("cpu low speed enable=%d", enable);
+        if (enable)
+            pm_scenario_stop(PM_SCENARIO_AUDIO);
+        else
+            pm_scenario_start(PM_SCENARIO_AUDIO);
+    }
+    LOG_D("audio_ioctl: cmd=%d ret=%d", cmd, ret);
     return ret;
 }
 

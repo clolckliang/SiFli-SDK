@@ -624,13 +624,13 @@ static void mp3ctrl_thread_entry_file(void *parameter)
                 LOG_I("mp3 fade");
                 is_closing = 1;
                 start = rt_tick_get_millisecond();
-                audio_ioctl(ctrl->client, -1, 0); //fade out
+                audio_ioctl(ctrl->client, AUDIO_IOCTL_FADE_OUT_START, 0); //fade out
             }
         }
         if (is_closing)
         {
             if (ctrl->is_suspended
-                    || !audio_ioctl(ctrl->client, 2, NULL)
+                    || !audio_ioctl(ctrl->client, AUDIO_IOCTL_IS_FADE_OUT_DONE, NULL)
                     || (rt_tick_get_millisecond() - start) > FADE_OUT_TIME_MS)
             {
                 LOG_I("mp3 fade done");
@@ -648,7 +648,7 @@ static void mp3ctrl_thread_entry_file(void *parameter)
                 {
 #if 0 //flush cache data
                     uint32_t cache_time_ms = 150;
-                    audio_ioctl(ctrl->client, 1, &cache_time_ms);
+                    audio_ioctl(ctrl->client, AUDIO_IOCTL_FLUSH_TIME_MS, &cache_time_ms);
                     rt_thread_mdelay(cache_time_ms + 20);
 #endif
                     audio_close(ctrl->client);
@@ -848,7 +848,7 @@ look_write_result:
         if (find_sync_in_cache(ctrl) < 0)
         {
             uint32_t cache_time_ms = 150;
-            audio_ioctl(ctrl->client, 1, &cache_time_ms);
+            audio_ioctl(ctrl->client, AUDIO_IOCTL_FLUSH_TIME_MS, &cache_time_ms);
             rt_thread_mdelay(cache_time_ms + 20);
 
             if (ctrl->loop_times > 0)
@@ -1119,13 +1119,13 @@ static void wave_thread_entry_file(void *parameter)
                 LOG_I("wav fade");
                 is_closing = 1;
                 start = rt_tick_get_millisecond();
-                audio_ioctl(ctrl->client, -1, 0); //fade out
+                audio_ioctl(ctrl->client, AUDIO_IOCTL_FADE_OUT_START, 0); //fade out
             }
         }
         if (is_closing)
         {
             if (ctrl->is_suspended
-                    || !audio_ioctl(ctrl->client, 2, NULL)
+                    || !audio_ioctl(ctrl->client, AUDIO_IOCTL_IS_FADE_OUT_DONE, NULL)
                     || (rt_tick_get_millisecond() - start) > FADE_OUT_TIME_MS)
             {
                 LOG_I("wav fade done");
@@ -1292,7 +1292,7 @@ check_write_result:
         {
             //wait cache out to speaker
             uint32_t cache_time_ms = 150;
-            audio_ioctl(ctrl->client, 1, &cache_time_ms);
+            audio_ioctl(ctrl->client, AUDIO_IOCTL_FLUSH_TIME_MS, &cache_time_ms);
             rt_thread_mdelay(cache_time_ms + 20);
             ctrl->is_file_end = 1;
             if (ctrl->loop_times > 0)

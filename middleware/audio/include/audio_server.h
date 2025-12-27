@@ -1,6 +1,17 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2025 SiFli Technologies(Nanjing) Co., Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef AUDIO_SERVER_H
 #define AUDIO_SERVER_H  1
 #include <rtthread.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "audioproc.h"
 #include "audio_mem.h"
 
@@ -13,7 +24,7 @@
     all API should called after INIT_ENV_EXPORT(audio_server_init)
 */
 #if SOFTWARE_TX_MIX_ENABLE
-    #define TWS_MIX_ENABLE              1
+#define TWS_MIX_ENABLE              1
 #endif
 
 typedef struct
@@ -180,6 +191,15 @@ int audio_write(audio_client_t handle, uint8_t *data, uint32_t data_len);
 
 int audio_read(audio_client_t handle, uint8_t *buf, uint32_t buf_size);
 
+#define AUDIO_IOCTL_FADE_OUT_START                  -1  // parameter type is NA
+#define AUDIO_IOCTL_FACTORY_LOOPBACK_GAIN           0   // parameter type is uint32_t
+#define AUDIO_IOCTL_FLUSH_TIME_MS                   1   // parameter type is uint32_t *
+#define AUDIO_IOCTL_IS_FADE_OUT_DONE                2   // parameter type is NA
+#define AUDIO_IOCTL_BYTES_IN_CACHE                  3   // parameter type is uint32_t *
+#define AUDIO_IOCTL_ENABLE_CPU_LOW_SPEED            4   /* parameter type is uint32_t
+                                                              1 low speed
+                                                              0 high speed */
+
 int audio_ioctl(audio_client_t handle, int cmd, void *parameter);
 
 int audio_close(audio_client_t handle);
@@ -194,16 +214,16 @@ int audio_close(audio_client_t handle);
 int audio_server_select_public_audio_device(audio_device_e audio_device);
 
 #ifdef AUDIO_USING_MANAGER
-    /**
-    * @brief  set audio_type's private audio device to overload audio_type's public audio_device
-    should call by system UI or app UI
-    * @param  audio_type audio type
-    * @param  audio_device  audio_type's audio device
-    * @retval int  0 success, other failed
-    */
-    int audio_server_select_private_audio_device(audio_type_t audio_type, audio_device_e audio_device);
+/**
+* @brief  set audio_type's private audio device to overload audio_type's public audio_device
+should call by system UI or app UI
+* @param  audio_type audio type
+* @param  audio_device  audio_type's audio device
+* @retval int  0 success, other failed
+*/
+int audio_server_select_private_audio_device(audio_type_t audio_type, audio_device_e audio_device);
 #else
-    #define  audio_server_select_private_audio_device(audio_type, audio_device) 0
+#define  audio_server_select_private_audio_device(audio_type, audio_device) 0
 #endif
 /**
   * @brief  register audio device, must not be called before INIT_ENV_EXPORT(audio_server_init)
@@ -298,7 +318,7 @@ void bt_tx_event_to_audio_server(); //only for bt
 
 int is_a2dp_working(void);
 #ifndef _WIN32
-    bool audio_device_is_a2dp_sink();
+bool audio_device_is_a2dp_sink();
 #endif /* _WIN32 */
 uint8_t get_server_current_device(void);
 uint8_t get_server_current_play_status(void);
@@ -309,5 +329,9 @@ void audio_3a_set_bypass(uint8_t is_bypass, uint8_t mic, uint8_t down);
 void micbias_power_off();
 void micbias_power_on();
 
+
+#ifdef __cplusplus
+}
 #endif
 
+#endif
