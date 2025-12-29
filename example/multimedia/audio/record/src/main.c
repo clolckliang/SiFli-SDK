@@ -88,7 +88,7 @@ static int audio_callback_record(audio_server_callback_cmt_t cmd, void *callback
         /* get recording pcm data. */
         audio_server_coming_data_t *p = (audio_server_coming_data_t *)reserved;
         /* pcm data left shift 4 bits to increase volume. */
-        auido_gain_pcm((int16_t *)p->data, p->data_len, 4);
+        //auido_gain_pcm((int16_t *)p->data, p->data_len, 4);
         /* save recording pcm data to memory buffer. */
         if (g_file_mem_offset + p->data_len <= sizeof(file_mem))
         {
