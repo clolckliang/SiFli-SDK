@@ -1677,6 +1677,11 @@ RTM_EXPORT(rt_hw_console_output);
  */
 __ROM_USED void rt_kputs(const char *str)
 {
+    if (log_paused)
+    {
+        return;
+    }
+
     if (!str) return;
 
 #ifdef RT_USING_DEVICE
