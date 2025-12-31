@@ -190,7 +190,7 @@ The application entry function is `ResetHandler` (in `drivers\cmsis\sf32lb58x\Te
 `HAL_Init` completes HAL initialization: it loads PMU calibration parameters, updates clock and IO settings, and initializes PSRAM and NOR Flash (according to the new clock configuration). In the diagram, green functions are board‑level driver functions with board‑specific implementations (`HAL_PreInit`, `BSP_IO_Init`, `BSP_PIN_Init`, `BSP_Power_Up`, etc.). Gray functions are virtual hooks implemented by the application (or not), independent of the board, so different applications on the same board can customize behavior (e.g., different IO configurations). Horizontally, the flow shows nested calls inside functions (e.g., `HAL_PreInit` calls clock‑configuration helpers; `HAL_MspInit` calls `BSP_IO_Init`). Vertically, it shows serially executed functions (e.g., after `HAL_PreInit` finishes, `HAL_PostMspInit` runs).
 
 
-```{image} ../../assets/hal_init.png
+```{image} ../../assets/hal_init_english.png
 :alt: hal_init_flow
 :name: hal_init_flow
 ```
