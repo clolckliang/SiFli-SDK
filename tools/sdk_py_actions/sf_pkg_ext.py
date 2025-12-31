@@ -179,7 +179,6 @@ def action_extensions(base_actions: Dict, project_path: str) -> Any:
                 "--output-folder=sf-pkgs", 
                 "--deployer=full_deploy", 
                 "--envs-generation=false",
-                "--env-generation=false",
                 "-r=artifactory"
             ], check=True)
             print("Packages installed successfully")
