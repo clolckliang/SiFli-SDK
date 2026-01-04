@@ -1,7 +1,8 @@
 # peripheral_with_ota example说明和SDK DFU接入
 
 ## 支持的平台
-52x，56x和58x的芯片
+52x，56x和58x的芯片\
+55x芯片已实现，流程略有不同
 
 ## 概述
 <!-- 例程简介 -->
@@ -14,10 +15,10 @@
 
 ## 例程的使用
 1. 本例程的主工程同BLE peripheral，该工程的时候方法可以参照example/ble/peripheral工程
-2. 制作升级包的工具ezip.exe，img_toolv37.exe在tool/secureboot目录下，key相关内容在tool/secureboot/sifli02目录下，把以上文件放在同一目录然后按照下文制作升级包部分，制作升级包。
+2. 制作升级包的工具img_toolv37.exe在tool/secureboot目录下
 3. 将升级包通过BLE APP下载，或者uart/jlink下载DFU_DOWNLOAD_REGION区域。
-4. 如果使用sifli ble app下载，将自动安装重启，如果是自行下载，需要调用dfu_offline_install_set_v2，然后调用HAL_PMU_ReBoot进行重启
-5. 重启后将运行升级包中的主程序。
+4. 如果使用sifli ble app下载，将自动安装重启，如果是自行下载，需要调用dfu_package_install_set，然后在非55x平台调用HAL_PMU_ReBoot进行重启，55x平台需要调用dfu_bootjump进行跳转
+5. 重启或跳转后将运行升级包中的主程序。
 
 ### menuconfig配置
 见接入方法-主工程
@@ -103,9 +104,17 @@ Sconstruct
 
 
 ## 制作升级包
+```c
 .\imgtoolv37.exe gen_dfu --img_para hcpu 16 0 dfu 16 6 --com_type=0 --offline_img=2
+```
 
-所有文件和待制作的升级文件，放到同一目录
+如果移动了tool/secureboot/imgtoolv37.exe的位置，可能会找不到tool/png2ezip/ezip.exe，可以使用--ezip_path指定ezip.exe的位置。\
+举个例子，如果移动imgtoolv37.exe和ezip.exe到了另一个目录，两个文件在同一层，则可以使用如下命令\
+```c
+.\imgtoolv37.exe gen_dfu --img_para hcpu 16 0 dfu 16 6 --com_type=0 --offline_img=2 --ezip_path=ezip.exe
+```
+
+制作工具和待制作的升级文件，放到同一目录\
 同时制作hcpu和dfu的命令如上，hcpu代表制作hcpu.bin，dfu代表制作dfu.bin
 Bin名字后面的第一个参数用于压缩，16是使用压缩，0是不压缩
 Bin名字后面的第二个参数表示image id，hcpu是0，dfu 是6。
@@ -131,7 +140,7 @@ https://github.com/OpenSiFli/SiFli_OTA_APP_IOS\
 对应的部分在"SiFli-SDK OTA (Nor Offline)"
 
 ## 手机使用
-操作如下图示意，搜索板子的BLE广播，点击对应设备，然后选择nor dfu，最后选择offline，不需要再点击下方的start等按钮
+操作如下图示意，搜索板子的BLE广播，点击对应设备，然后选择nor dfu，最后选择offline，不需要再点击下方的start等按钮\
 ![app1](./assets/app.jpg)![app2](./assets/app2.jpg)
 ![app3](./assets/app3.jpg)![app2](./assets/app4.jpg)
 
@@ -162,3 +171,4 @@ board.conf中打开的内容，dfu工程也会编译，导致dfu工程编译一�
 |0.0.4 |04/2025 |增加http下载示例，调整目录结构和宏开关 |
 |0.0.5 |11/2025 |增加55x的升级适配 |
 |0.0.6 |11/2025 |更新一些过时内容 |
+|0.0.7 |01/2026 |更新制作工具，修复ezip工具的路径问题 |

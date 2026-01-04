@@ -15,12 +15,12 @@ import binascii
 import array
 import platform
 
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Random import get_random_bytes
-from Cryptodome.Cipher import AES, PKCS1_OAEP
-from Cryptodome.Hash import SHA256
-from Cryptodome.Signature import pkcs1_15
-from Cryptodome.Util import Counter
+from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Hash import SHA256
+from Crypto.Signature import pkcs1_15
+from Crypto.Util import Counter
 from crccheck.crc import Crc32Mpeg2
 
 DFU_FLAG_ENC      =1
@@ -558,12 +558,18 @@ def dfu_compress_bin(img, eimg):
             temp_file = "temp_com.bin"
             with open (temp_file, "wb") as fi:
                 fi.write(data2)
-            if platform.system() == 'Windows':
-                main = "..\png2ezip\eZIP -gzip " + temp_file + " -length -noheader"
-            elif platform.system() == 'Linux':
-                main = "../png2ezip/ezip_linux -gzip " + temp_file + " -length -noheader"
+            if FLAGS.ezip_path:
+                ezip_cmd = FLAGS.ezip_path
             else:
-                main = "../png2ezip/ezip_mac -gzip " + temp_file + " -length -noheader"
+                if platform.system() == 'Windows':
+                    ezip_cmd = os.path.join("..", "png2ezip", "eZIP")
+                elif platform.system() == 'Linux':
+                    ezip_cmd = os.path.join("..", "png2ezip", "ezip_linux")
+                else:
+                    ezip_cmd = os.path.join("..", "png2ezip", "ezip_mac")
+
+            main = f'{ezip_cmd} -gzip {temp_file} -length -noheader'
+            print (main)
             r_v = os.system(main)
             #print (r_v)
 
@@ -921,6 +927,11 @@ if __name__ == '__main__':
         type=int,
         default=1,
         help='make general file 16-byte alignment')
+    parser.add_argument(
+        '--ezip_path',
+        type=str,
+        default=None,
+        help='ezip path dir')
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS, unparsed = parser.parse_known_args()
