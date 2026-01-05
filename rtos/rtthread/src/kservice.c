@@ -1677,6 +1677,11 @@ RTM_EXPORT(rt_hw_console_output);
  */
 __ROM_USED void rt_kputs(const char *str)
 {
+    if (log_paused)
+    {
+        return;
+    }
+
     if (!str) return;
 
 #ifdef RT_USING_DEVICE
@@ -1815,6 +1820,11 @@ static size_t rt_hexdump_strcpy(size_t cur_len, char *dst, const char *src)
 __ROM_USED void rt_hexdump(const char *tag, rt_size_t width, rt_uint8_t *buf, rt_size_t size)
 {
 #define __is_print(ch)       ((unsigned int)((ch) - ' ') < 127u - ' ')
+
+    if (log_paused)
+    {
+        return;
+    }
 
     rt_size_t i, j;
     rt_size_t log_len = 0, name_len = rt_strlen(tag);

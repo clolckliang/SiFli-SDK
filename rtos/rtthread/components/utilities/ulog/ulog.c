@@ -189,8 +189,10 @@ __ROM_USED size_t ulog_ultoa(char *s, unsigned long int n)
 
 static void output_unlock(void)
 {
+    rt_base_t level = rt_hw_interrupt_disable();
+    rt_hw_interrupt_enable(level);
     /* is in thread context */
-    if (rt_interrupt_get_nest() == 0)
+    if ((rt_interrupt_get_nest() == 0) && (level == 0))
     {
         rt_mutex_release(&ulog.output_locker);
     }
@@ -204,8 +206,10 @@ static void output_unlock(void)
 
 static void output_lock(void)
 {
+    rt_base_t level = rt_hw_interrupt_disable();
+    rt_hw_interrupt_enable(level);
     /* is in thread context */
-    if (rt_interrupt_get_nest() == 0)
+    if ((rt_interrupt_get_nest() == 0) && (level == 0))
     {
         rt_mutex_take(&ulog.output_locker, RT_WAITING_FOREVER);
         RT_ASSERT(ulog.output_locker.hold == 1);
@@ -220,8 +224,10 @@ static void output_lock(void)
 
 static char *get_log_buf(void)
 {
+    rt_base_t level = rt_hw_interrupt_disable();
+    rt_hw_interrupt_enable(level);
     /* is in thread context */
-    if (rt_interrupt_get_nest() == 0)
+    if ((rt_interrupt_get_nest() == 0) && (level == 0))
     {
         return ulog.log_buf_th;
     }
@@ -615,7 +621,8 @@ __ROM_USED void ulog_raw(const char *format, ...)
     va_list args;
     int fmt_result;
 
-    RT_ASSERT(ulog.init_ok);
+    if (!ulog.init_ok)
+        return;
 
     /* get log buffer */
     log_buf = get_log_buf();
@@ -656,7 +663,8 @@ __ROM_USED void ulog_vraw(const char *format, va_list args)
     char *log_buf = NULL;
     int fmt_result;
 
-    RT_ASSERT(ulog.init_ok);
+    if (!ulog.init_ok)
+        return;
 
     /* get log buffer */
     log_buf = get_log_buf();
@@ -707,7 +715,8 @@ __ROM_USED void ulog_hexdump(const char *tag, rt_size_t width, rt_uint8_t *buf, 
     char *log_buf = NULL, dump_string[8];
     int fmt_result;
 
-    RT_ASSERT(ulog.init_ok);
+    if (!ulog.init_ok)
+        return;
 
 #ifdef ULOG_USING_FILTER
     /* level filter */
