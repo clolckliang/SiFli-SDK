@@ -613,7 +613,6 @@ static void media_read_thread(void *p)
         return;
     }
     os_event_flags_set(thiz->evt_init, EVT_INIT_OK);
-#endif
 
     while (thiz->is_ok)
     {
