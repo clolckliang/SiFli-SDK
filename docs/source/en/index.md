@@ -51,4 +51,5 @@ bootloader
 example/index
 api/index
 contribute/index
+sf_pkg/index
 ```
