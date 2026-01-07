@@ -1,6 +1,6 @@
-# Using SF-PKG in Your Project
+# Using SiFli Package Registry in Your Project
 
-The following steps explain how to install and use SF-PKG dependencies in an existing project.
+The following steps explain how to install and use SiFli Package Registry dependencies in an existing project.
 
 ## Initialize Dependencies (sf-pkg-init)
 

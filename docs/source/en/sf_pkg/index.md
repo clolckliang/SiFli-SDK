@@ -1,6 +1,6 @@
-# SF-PKG User Guide
+# SiFli Package Registry
 
-Similar to [RT-PKG](../app_note/rt-pkg.md), SF-PKG is also a package manager. However, SF-PKG uses [Conan](https://conan.io/) as its underlying package management tool, supporting a rich set of package management features. It facilitates the creation, upload, and download of driver packages, and supports semantic versioning.
+Similar to [RT-PKG](../app_note/rt-pkg.md), SiFli Package Registry is also a package manager. However, SiFli Package Registry uses [Conan](https://conan.io/) as its underlying package management tool, supporting a rich set of package management features. It facilitates the creation, upload, and download of driver packages, and supports semantic versioning.
 
 ## Prerequisites
 

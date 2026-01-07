@@ -1,6 +1,6 @@
-# 创建并上传 SF-PKG 包
+# 创建并上传 SiFli 组件包
 
-本节介绍如何登录、创建、构建并上传自己的 SF-PKG 包。
+本节介绍如何登录、创建、构建并上传自己的 SiFli 组件包。
 
 ## 获取访问令牌
 
@@ -17,16 +17,16 @@
 每台电脑只需登录一次，登录信息会保存在本地。
 ```
 
-## 登录 sf-pkg
+## 登录 SiFli 组件注册表
 
 ```bash
-sdk.py sf-pkg-login -u <小写的GitHub用户名> -t 获取的 token
+sdk.py sf-pkg-login -u <小写的 GitHub 用户名> -t 获取的 token
 ```
 
 ![登录成功](./assert/sdk-pkg-login.png)
 
 ```{warning}
--n参数必须是小写的GitHub用户名！否则会导致上传失败。
+-n 参数必须是小写的 GitHub 用户名！否则会导致上传失败。
 ```
 
 ## 创建包配置（sf-pkg-new）
@@ -76,7 +76,6 @@ class Example_AddRecipe(ConanFile):
 
     python_requires = "sf-pkg-base/[^1.0]@sifli"
     python_requires_extend = "sf-pkg-base.SourceOnlyBase"
-
 
     def requirements(self):
         # add your package dependencies here, for example:

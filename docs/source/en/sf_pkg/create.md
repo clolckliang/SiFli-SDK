@@ -1,6 +1,6 @@
-# Creating and Uploading SF-PKG Packages
+# Creating and Uploading SiFli Package Registry Packages
 
-This section describes how to log in, create, build, and upload your own SF-PKG packages.
+This section describes how to log in, create, build, and upload your own SiFli Package Registry packages.
 
 ## Obtaining an Access Token
 
@@ -17,7 +17,7 @@ This section describes how to log in, create, build, and upload your own SF-PKG 
 You only need to log in once per computer. Login information will be saved locally.
 ```
 
-## Log in to sf-pkg
+## Log in to SiFli Package Registry
 
 ```bash
 sdk.py sf-pkg-login -u <lowercase_GitHub_username> -t <obtained_token>
