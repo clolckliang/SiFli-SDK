@@ -26,25 +26,27 @@ def analyze_file(config_file, scancode_file, scanned_files_dir):
         never_check_file = []
 
     copyrights = config.get("copyright", {})
-    check_copytight = copyrights.get("check", False)
+    check_copyright = copyrights.get("check", False)
     lic_config = config.get("license")
     lic_main = lic_config.get("main")
-    lic_cat = lic_config.get("category")
+    # lic_cat = lic_config.get("category")
     report_invalid_license = lic_config.get("report_invalid", False)
-    report_unknown_license = lic_config.get("report_unknowng", False)
+    report_unknown_license = lic_config.get("report_unknown", False)
     report_missing_license = lic_config.get("report_missing", False)
-    more_cat = []
-    more_cat.append(lic_cat)
+    extensions_config = config.get("extensions", [])
+    extension_paths = [rule.get("path") for rule in extensions_config if rule.get("path")]
+    extension_rules = {rule.get("path"): rule.get("license") for rule in extensions_config if rule.get("path") and rule.get("license")}
+    # more_cat = []
+    # more_cat.append(lic_cat)
     more_lic = lic_config.get('additional', [])
     more_lic.append(lic_main)
-
     # Scancode may report 'unknown-license-reference' if there are lines
     # containing the word 'license' in the source files, so ignore these for
     # now.
-    more_cat.append('Unstated License')
+    # more_cat.append('Unstated License')
     more_lic.append('unknown-license-reference')
 
-    if check_copytight:
+    if check_copyright:
         print("Will check for missing copyrights...")
 
     check_langs = []
@@ -56,6 +58,8 @@ def analyze_file(config_file, scancode_file, scanned_files_dir):
 
             orig_path = str(file['path']).replace(scanned_files_dir, '')
             licenses = file['license_detections']
+            detected_license_spdx = file['detected_license_expression_spdx']
+            detected_expr = detected_license_spdx or ""
             #licenses.append(file['detected_license_expression'])
             file_type = file.get("file_type")
             kconfig = "Kconfig" in orig_path and file_type in ['ASCII text']
@@ -65,7 +69,7 @@ def analyze_file(config_file, scancode_file, scanned_files_dir):
                 check = False
             elif file.get("programming_language") in never_check_langs:
                 check = False
-            elif file.get("base_name") in never_check_file:
+            elif file.get("name") in never_check_file:
                 check = False
             elif kconfig:
                 check = True
@@ -77,33 +81,33 @@ def analyze_file(config_file, scancode_file, scanned_files_dir):
                 check = True
 
             if check:
+                matched_ext_paths = [p for p in extension_paths if p in orig_path]
+                if matched_ext_paths:
+                    # Use the longest match to avoid less-specific parent paths winning.
+                    matched_path = max(matched_ext_paths, key=len)
+                    matched_license = extension_rules.get(matched_path, [])
+
+                    allowed_licenses = matched_license if isinstance(matched_license, list) else [matched_license]
+                    if not any(allowed and allowed in detected_expr for allowed in allowed_licenses) and report_invalid_license:
+                        report += ("* {} has invalid license: {}\n".format(orig_path, detected_expr))
+                    continue
                 if not licenses and report_missing_license:
-                    report += ("* {} missing license.\n".format(orig_path))
+                    report += ("* {} missing license.".format(orig_path))
                 else:
-                    for lic in licenses:
-                        '''
-                        if lic['key'] not in more_lic:
-                            report += ("* {} has invalid license: {}\n".format(
-                                orig_path, lic['key']))
-                        if lic['category'] not in more_cat:
-                            report += ("* {} has invalid license type: {}\n".format(
-                                orig_path, lic['category']))
-                        if lic['key'] == 'unknown-spdx':
-                            report += ("* {} has unknown SPDX: {}\n".format(
-                                orig_path, lic['key']))
-                        '''
-                        if lic['license_expression'] not in more_lic and report_invalid_license:
-                            report += ("* {} has invalid license: {}\n".format(
-                                orig_path, lic['license_expression']))
-                        if lic['license_expression_spdx'] == 'unknown-spdx' and report_unknown_license:
-                            report += ("* {} has unknown SPDX: {}\n".format(
-                                orig_path, lic['license_expression_spdx']))
-                if check_copytight and not file['copyrights'] and \
+                    allowed_licenses = more_lic if isinstance(more_lic, list) else [more_lic]
+                    if not any(allowed and allowed in detected_expr for allowed in allowed_licenses) and report_invalid_license:
+                        report += ("* {} has invalid license: {}\n".format(orig_path, detected_expr))
+                    # for lic in licenses:
+                    #     if lic['license_expression_spdx'] not in more_lic and report_invalid_license:
+                    #         report += ("* {} has invalid license: {}\n".format(orig_path, lic['license_expression_spdx']))
+                    #     if lic['license_expression_spdx'] == 'unknown-spdx' and report_unknown_license:
+                    #         report += ("* {} has unknown SPDX: {}\n".format(orig_path, lic['license_expression_spdx']))
+                if check_copyright and not file['copyrights'] and \
                         file.get("programming_language") != 'CMake':
                     report += ("* {} missing copyright.\n".format(orig_path))
 
 
-    return(report)
+    return report
 
 
 def parse_args():

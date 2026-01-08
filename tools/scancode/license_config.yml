@@ -1,11 +1,10 @@
 license:
-  main: apache-2.0
+  main: Apache-2.0
   additional: 
     - MIT
   report_invalid: true
   report_unknown: true
   report_missing: true
-  category: Permissive
 copyright:
   check: true
 exclude:
@@ -18,10 +17,26 @@ exclude:
     - cfg
     - config
     - bat
+    - md
   special_file:
     - SConscript
     - SConstruct
+    - ChangeLog
     - Kconfig
     - rtconfig.h
+    - config.h
   langs:
     - HTML
+extensions:
+  - path:
+      "external/ffmpeg"
+    license:
+      - LGPL-2.1-only
+      - LGPL-2.1-or-later
+      - LGPL-3.0-only
+      - LGPL-3.0-or-later
+  - path:
+      "external/faad2"
+    license:
+      - GPL-2.0-only
+      - GPL-2.0-or-later
