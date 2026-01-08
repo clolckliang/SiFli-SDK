@@ -58,6 +58,15 @@ For rt_device examples, you also need to list the configuration switches used in
 6. This example has added the number of autoconnect retries. You can set the maximum retry count by entering the finsh command: pan_cmd set_retry_time 5 (number of retries)
 7. Ensure that the phone has enabled network sharing. After the phone disconnects from pan, if you want to automatically reconnect, you can enter the finsh command: pan_cmd autoconnect
 
+### Notes
+- If weather retrieval fails, you need to first verify the validity of the local Bluetooth MAC address OUI: The first three bytes (OUI part) of the MAC address must be a valid value assigned by the IEEE. Using an unauthorized OUI may cause network issues.The address can be modified manually.
+- MAC address get command format: nvds get_mac(Invalid address: xxxxxx52FD11)
+- Command format for setting Bluetooth MAC: nvds update addr 6 xxxxxxYYYYYY
+(where YYYYYY: OUI in byte‑reversed order (must be reversed); xxxxxx: user‑defined last 3 bytes)(Valid address: xxxxxx52FD5C)
+- Example: A valid OUI E8:6A:64 → reversed to 646AE8
+- Auto-update is enabled (CONFIG_NVDS_AUTO_UPDATE_MAC_ADDRESS), manual nvds command overridden.
+- If nvds get_mac does not change after a reboot (i.e., the command to set the address fails):  Check if CONFIG_NVDS_AUTO_UPDATE_MAC_ADDRESS is enabled. If it is, disable this macro, then recompile and flash the firmware before attempting to manually set the MAC address again.
+
 ### Hardware Requirements
 Before running this example, you need to prepare:
 + One development board supported by this example ([Supported Platforms](#Platform_pan)).
