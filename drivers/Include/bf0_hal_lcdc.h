@@ -144,7 +144,8 @@ typedef enum
     LCDC_PIXEL_FORMAT_A4,
     LCDC_PIXEL_FORMAT_A8,
     LCDC_PIXEL_FORMAT_L8,
-    LCDC_PIXEL_FORMAT_RGB565_SWAP, /*Swap byte: Byte0{R[4:0]G[5:3]}, Byte1{G[2:0]B[4:0]}*/
+    LCDC_PIXEL_FORMAT_RGB565_SWAP, /* Byte0{R[4:0]G[5:3]}, Byte1{G[2:0]B[4:0]}, only for layer format*/
+    LCDC_PIXEL_FORMAT_BGR565_SWAP, /* Byte0{B[4:0]G[5:3]}, Byte1{G[2:0]R[4:0]}, only for LCDC output format*/
 } HAL_LCDC_PixelFormat;
 /**
   * @}

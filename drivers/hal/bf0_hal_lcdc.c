@@ -607,7 +607,7 @@ static HAL_StatusTypeDef SetOutFormat(LCDC_HandleTypeDef *lcdc, HAL_LCDC_PixelFo
         break;
 
 #ifndef SF32LB55X
-    case LCDC_PIXEL_FORMAT_RGB565_SWAP:
+    case LCDC_PIXEL_FORMAT_BGR565_SWAP:
         reg_v |= (0 << LCD_IF_LCD_CONF_AHB_FORMAT_Pos)                // AHB LCD/RAM
                  | (1 << LCD_IF_LCD_CONF_DPI_LCD_FORMAT_Pos)           // DPI LCD
                  | (1 << LCD_IF_LCD_CONF_SPI_LCD_FORMAT_Pos)           // SPI LCD
