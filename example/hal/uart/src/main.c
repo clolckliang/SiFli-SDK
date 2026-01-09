@@ -20,9 +20,6 @@
     #define UART2_DMA_RX_IRQHandler          DMAC1_CH5_IRQHandler
 #endif
 #define UART2_RX_DMA_RCC                 0
-#define UART2_RX_DMA_INSTANCE            DMA1_Channel6
-#define UART2_RX_DMA_REQUEST             DMA_REQUEST_7
-#define UART2_RX_DMA_IRQ                 DMAC1_CH6_IRQn
 
 #define UART_INSTANCE           hwp_usart2
 #define UART_INTERRUPT          USART2_IRQn
