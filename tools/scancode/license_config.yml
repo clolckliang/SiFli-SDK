@@ -26,6 +26,7 @@ exclude:
     - rtconfig.h
     - config.h
     - rtconfig.py
+    - proj.conf
   langs:
     - HTML
 extensions:
