@@ -43,6 +43,8 @@ Example:
 ```bash
 sdk.py sf-pkg-search sht30
 ```
+You can also search directly on the official website of the SiFli Package Registry: Click here to visit [SiFli Package Registry](https://packages.sifli.com/)
+
 
 ## Install Dependencies (sf-pkg-install)
 

@@ -1,7 +1,7 @@
 # SiFli 组件注册表
 
 与 [RT-PKG](../app_note/rt-pkg.md) 类似，SiFli Package Registry 也是一个包管理器。但 SiFli Package Registry 底层采用 [Conan](https://conan.io/) 作为包管理工具，支持丰富的包管理功能，方便创建、上传和下载驱动包，并支持语义化版本管理。
-
+- 点此访问 [SiFli组件注册表](https://packages.sifli.com/)
 ## 使用前准备
 
 - 进入有效的 SDK 工程目录

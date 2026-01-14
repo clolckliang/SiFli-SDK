@@ -41,6 +41,8 @@ sdk.py sf-pkg-search <package_name>
 ```bash
 sdk.py sf-pkg-search sht30
 ```
+也可以直接在组件注册表官网进行搜索：点此访问 [SiFli组件注册表](https://packages.sifli.com/)
+
 
 ## 安装依赖（sf-pkg-install）
 

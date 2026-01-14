@@ -1,7 +1,7 @@
 # SiFli Package Registry
 
 Similar to [RT-PKG](../app_note/rt-pkg.md), SiFli Package Registry is also a package manager. However, SiFli Package Registry uses [Conan](https://conan.io/) as its underlying package management tool, supporting a rich set of package management features. It facilitates the creation, upload, and download of driver packages, and supports semantic versioning.
-
+- Click here to access the [SiFli Package Registry](https://packages.sifli.com/)
 ## Prerequisites
 
 - Navigate to a valid SDK project directory
