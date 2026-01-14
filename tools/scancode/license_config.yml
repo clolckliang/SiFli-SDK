@@ -42,3 +42,8 @@ extensions:
     license:
       - GPL-2.0-only
       - GPL-2.0-or-later
+  - path:
+      "tools/build"
+    license:
+      - GPL-2.0-only
+      - GPL-2.0-or-later
