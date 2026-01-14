@@ -189,6 +189,20 @@ def ImgFileBuilder(target, source, env):
         # 现在将转换后的真实的.c文件转为.tmp.c后缀以让scons后续编译能正常进行
         shutil.move('{}'.format(target[0]).replace(".tmp.c", ".c"), '{}'.format(target[0])) 
 
+            
+
+def BinFileBuilder(target, source, env):
+    """A builder specifically designed for generating binary.ezip files"""
+    SIFLI_SDK = os.getenv('SIFLI_SDK')
+    EZIP_PATH = os.path.join(SIFLI_SDK, f"tools/png2ezip/ezip{env['tool_suffix']}")
+    filename = os.path.basename("{}".format(target[0]))
+    tgt_directory = os.path.dirname("{}".format(target[0]))
+
+    logging.info('BinFileBuilder= '+env['FLAGS'])
+    cmd = EZIP_PATH + ' -convert ' + str(source[0]) + ' ' + env['FLAGS'] + ' -outdir {}'.format(tgt_directory)
+
+    subprocess.run(cmd, shell=True, check=True)
+
 def FontConvertBuild(target, source, env):
     """
     Build action to convert font files to C array using the internal converter
@@ -297,7 +311,12 @@ def ConvertFont(env, source, flags):
 def ImgResource(env, source, flags):
     target = []
     for s in source:
-        t = env.ImgFile(s, FLAGS = flags)
+        if '-binfile' in flags:
+            # If the -binfile parameter is included, use the binary builder.
+            t = env.BinFile(s, FLAGS=flags)
+        else:
+            # Otherwise, use the default C file builder
+            t = env.ImgFile(s, FLAGS=flags)
         target.extend(t)
     
     return target
@@ -1294,6 +1313,11 @@ def PrepareBuilding(env, has_libcpu=False, remove_components=[], buildlib=None):
     img_file_action = SCons.Action.Action(ImgFileBuilder, 'GenImgFile $TARGET')
     bld = Builder(action = img_file_action, suffix = '.tmp.c', src_suffix = '.c')
     Env.Append(BUILDERS = {"ImgFile": bld})
+    
+    bin_file_action = SCons.Action.Action(BinFileBuilder, 'GenBinFile $TARGET')
+    bin_bld = Builder(action = bin_file_action)
+    Env.Append(BUILDERS = {"BinFile": bin_bld})
+
     Env.AddMethod(ImgResource, "ImgResource")
 
     # add font builder
