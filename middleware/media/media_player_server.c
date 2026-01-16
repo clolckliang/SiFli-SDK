@@ -1,3 +1,9 @@
+/*
+ * SPDX-FileCopyrightText: 2019-2026 SiFli Technologies(Nanjing) Co., Ltd
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <rtthread.h>
 #include "media_dec.h"
 #include "media_internal.h"
@@ -2005,7 +2011,7 @@ uint8_t *ffmpeg_get_first_ezip(const char *filename, uint32_t *w, uint32_t *h, u
     else
     {
         close(fd);
-        return false;
+        return NULL;
     }
 
     if (w && h)
