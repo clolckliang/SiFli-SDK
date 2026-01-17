@@ -126,7 +126,52 @@ Bin名字后面的第二个参数表示image id，hcpu是0，dfu 是6。
 
 如果需要升级HCPU和DFU以外的bin，需要自行指定image id对应的flash地址，在dfu_flash.c的dfu_get_download_addr_by_id中，添加新的ID，然后返回ptab.c中定义的地址即可，flag&DFU_FLAG_COMPRESS条件下的地址不需要实现。
 ![package](./assets/package.png)
- 
+
+## 升级包结构和安装流程
+|OFFSET|LENGTH|CONTENT|
+|:---|:---|:---|
+|0|4|DFU Magic(0x46, 0x43, 0x 45, 0x53)|
+|4|1|安装包的协议版本|
+|5|1|安装flag，0xFF|
+|6|2|Image count|
+|8|4|所有image内容一起（image1+image2+…），做CRC32MPEG2的结果|
+|12|1|第一个image的id|
+|13|1|第一个image的flag|
+|14|4|第一个image的长度|
+|18|1|第二个image的id|
+|19|1|第二个image的flag|
+|20|4|第二个image的长度|
+| | |...|
+| | |ImageX|
+| | |ImageY|
+| | |...|
+
+### HCPU中的安装流程
+调用dfu_package_install(INSTALL_TYPE_OTA_MANAGER)
+1. 检查MAGIC，计算CRC（规则见安装包结构），检验安装包的合法性和完整性。
+2. 如果有安装包中有ota manager，则安装ota manager。
+3. 擦除原ota manager
+4. 如果是非压缩的bin，直接将dfu安装包对应image的内容，复制到目标区域。
+5. 如果是压缩的bin，则解压然后写到对应区域。
+6. 更新DFU NV
+7. 更新RTC寄存器，重启
+
+### OTA MANAGER中的安装流程
+调用dfu_package_install(INSTALL_TYPE_IMAGE)
+1. 检查MAGIC，计算CRC（规则见安装包结构），检验安装包的合法性和完整性
+2. 安装除了ota manager之外的所有bin，安装处理同hcpu中的安装。
+3. 更新DFU NV
+4. 更新RTC寄存器，重启
+
+###  压缩格式
+压缩数据格式
+
+生成每个压缩bin时，会先填充一个8字节的header，包括了4字节原长和4字节分块长度，目前通常是10240。
+
+然后将原数据按照分块长度切分，每一块做EZIP硬件GZIP压缩或者软件ZLIB压缩，目前基本使用的是前者。把每一块压缩后的长度+压缩后的数据拼接，然后再把所有压缩块的数据拼接，再加上刚才的header，就组成了一个完整的compress bin。
+
+
+
 ## 手机APP和DEMO工程获取使用
 ### Android sifli ble app下载地址
 https://www.pgyer.com/gurSBc
@@ -172,3 +217,4 @@ board.conf中打开的内容，dfu工程也会编译，导致dfu工程编译一�
 |0.0.5 |11/2025 |增加55x的升级适配 |
 |0.0.6 |11/2025 |更新一些过时内容 |
 |0.0.7 |01/2026 |更新制作工具，修复ezip工具的路径问题 |
+|0.0.8 |01/2026 |增加关于安装的说明 |
