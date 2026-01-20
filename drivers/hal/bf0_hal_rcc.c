@@ -2434,15 +2434,15 @@ void HAL_RCC_HCPU_SetDeepWFIDiv(int8_t div, int8_t pdiv1, int8_t pdiv2)
     }
     if (pdiv1 >= 0)
     {
-        if (0 == pdiv2)
-        {
-            pdiv2 = 1;//The hardware requirements cannot be zero.
-        }
         mask |= HPSYS_RCC_DWCFGR_PDIV1_Msk;
         reg |= MAKE_REG_VAL(pdiv1, HPSYS_RCC_DWCFGR_PDIV1_Msk, HPSYS_RCC_CFGR_PDIV1_Pos);
     }
     if (pdiv2 >= 0)
     {
+        if (0 == pdiv2)
+        {
+            pdiv2 = 1;//The hardware requirements cannot be zero.
+        }
         mask |= HPSYS_RCC_DWCFGR_PDIV2_Msk;
         reg |= MAKE_REG_VAL(pdiv2, HPSYS_RCC_DWCFGR_PDIV2_Msk, HPSYS_RCC_CFGR_PDIV2_Pos);
     }
