@@ -7,7 +7,7 @@ Source path: example/bt/pan_ota
 <!-- Supported boards and chip platforms -->
 + sf32lb52-lcd_n16r8
 + sf32lb52-lchspi-ulp
-
++ sf32lb52-nano_a128r16
 
 ## Overview
 <!-- Example brief introduction -->

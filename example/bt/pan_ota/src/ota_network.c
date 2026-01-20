@@ -90,6 +90,9 @@ int register_device_with_server(void)
     #elif defined(BSP_USING_BOARD_SF32LB52_LCHSPI_ULP)
     reg_params.model = "sf32lb52-lchspi-ulp";
     reg_params.solution = "SF32LB52_ULP_NOR_TFT_CO5300";
+    #elif defined(BSP_USING_BOARD_SF32LB52_NANO_A128R16)
+    reg_params.model = "sf32lb52-nano-a128r16";
+    reg_params.solution = "SF32LB52_NANO_A128R16_TFT_CO5300";
     #endif
 
     reg_params.version = "v1.0"; // 当前固件版本
@@ -124,6 +127,10 @@ char* build_ota_query_url(const char* chip_id)
     #elif defined(BSP_USING_BOARD_SF32LB52_LCHSPI_ULP)
     snprintf(query_url, sizeof(query_url), 
              "https://ota.sifli.com/v2/example/pan_ota/SF32LB52_ULP_NOR_TFT_CO5300/sf32lb52-lchspi-ulp?chip_id=%s&version=latest",
+             chip_id);
+    #elif defined(BSP_USING_BOARD_SF32LB52_NANO_A128R16)
+    snprintf(query_url, sizeof(query_url), 
+             "https://ota.sifli.com/v2/example/pan_ota/SF32LB52_NANO_A128R16_TFT_CO5300/sf32lb52-nano-a128r16?chip_id=%s&version=latest",
              chip_id);
 
     #endif
