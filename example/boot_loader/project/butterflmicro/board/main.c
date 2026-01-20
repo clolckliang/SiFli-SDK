@@ -331,7 +331,6 @@ void boot_images_help()
             {
                 uint32_t needs_update_addr = FIRMWARE_INFO_BASE_ADDR + i * FIRMWARE_INFO_SIZE + NEEDS_UPDATE_OFFSET;
                 uint32_t magic_addr = FIRMWARE_INFO_BASE_ADDR + i * FIRMWARE_INFO_SIZE + NEEDS_MAGIC_OFFSET;
-                uint32_t needs_update_value = 0;
                 // Check the magic number first.
                 uint32_t magic_value = 0;
                 int magic_result = g_flash_read(magic_addr, (const int8_t *)&magic_value, sizeof(uint32_t));
@@ -339,7 +338,6 @@ void boot_images_help()
                 // Verify whether the magic number is correct.
                 if (magic_result == sizeof(uint32_t) && magic_value == FIRMWARE_MAGIC_DFU_PAN)
                 {
-
                     uint32_t needs_update_value = 0;
                     int result = g_flash_read(needs_update_addr, (const int8_t *)&needs_update_value, sizeof(uint32_t));
 
@@ -350,21 +348,16 @@ void boot_images_help()
                     }
                 }
             }
-            if (needs_update)
+            // Check if OTA program is valid
+            if (needs_update && is_ota_program_valid(DFU_PAN_LOADER_START_ADDR))
             {
-
-                // Check whether the OTA program is functioning properly
-                if (is_ota_program_valid(DFU_PAN_LOADER_START_ADDR))
-                {
-                    // Directly jump to the OTA program
-                    run_img(DFU_PAN_LOADER_START_ADDR);
-                }
-                else
-                {
-
-                }
+                // Reuse DFU's startup logic
+                // Set running_imgs[CORE_HCPU] to point to DFU's image header
+                sec_config_cache.running_imgs[CORE_HCPU] = (struct image_header_enc *) & 
+                    (((struct sec_configuration *)FLASH_TABLE_START_ADDR)->imgs[DFU_FLASH_IMG_IDX(DFU_FLASH_IMG_LCPU)]);
             }
         }
+
 // OTA logical program end
 
         dfu_install_info info = {0};
