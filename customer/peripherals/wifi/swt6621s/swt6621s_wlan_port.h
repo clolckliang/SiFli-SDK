@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2019-2022 SiFli Technologies(Nanjing) Co., Ltd
+ * SPDX-FileCopyrightText: 2026 SiFli Technologies(Nanjing) Co., Ltd
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -59,6 +59,57 @@ typedef void (*wifi_resume_cb_t)(void *arg);
 typedef void (*wifi_detect_slp_cb_t)(void *arg);
 
 /**
+ * @brief Firmware code reader callback.
+ *
+ * @param arg       User context pointer, passed through from wifi_ctl.
+ * @param boot_mode Zero-terminated string describing current boot mode
+ *                  (for example, selects which firmware image to use).
+ * @param lseek     Offset (in bytes) from the beginning of the firmware
+ *                  image; the callee should read from this position.
+ * @return          0 on success; negative value on failure.
+ */
+typedef int (*get_fwk_code_cb_t)(void *arg, char *boot_mode, uint32_t lseek);
+
+/**
+ * @brief Query maximum firmware size for a given boot mode.
+ *
+ * @param arg       User context pointer, passed through from wifi_ctl.
+ * @param boot_mode Zero-terminated string that identifies a boot mode
+ *                  / firmware slot.
+ * @return          Positive max size (in bytes) or 0/negative on error.
+ */
+typedef int (*get_fwk_maxsize_cb_t)(void *arg, char *boot_mode);
+
+/**
+ * @brief Callback to get RAM dump output path.
+ *
+ * @param arg       User context pointer, passed through from wifi_ctl.
+ * @param path_buf  Caller-provided buffer where the callee should write
+ *                  a zero-terminated filesystem path to store RAM dump.
+ * @return          0 on success; negative value on failure.
+ */
+typedef int (*wifi_get_ram_dump_path_t)(void *arg, char *path_buf);
+
+/**
+ * @brief Callback to adjust classic BT AFH channel map for a WiFi channel.
+ *
+ * @param arg       User context pointer, passed through from wifi_ctl.
+ * @param wifi_ch   WiFi channel number (e.g. 1~14 for 2.4G, 36+ for 5G)
+ *                  that should be protected from BT traffic.
+ * @return          0 on success; negative value on failure.
+ */
+typedef int (*wifi_set_bt_channel_map_t)(void *arg, int wifi_ch);
+
+/**
+ * @brief Callback to adjust BLE channel map for a WiFi channel.
+ *
+ * @param arg       User context pointer, passed through from wifi_ctl.
+ * @param wifi_ch   WiFi channel number around which BLE data channels
+ *                  may need to be disabled or de-prioritized.
+ * @return          0 on success; negative value on failure.
+ */
+typedef int (*wifi_set_ble_channel_map_t)(void *arg, int wifi_ch);
+/**
  * @brief Container for a suspend callback and its argument.
  */
 struct wifi_suspend_cb
@@ -89,6 +140,37 @@ struct wifi_detect_slp_cb
     /** Opaque user argument passed to the callback. */
     void *arg;
 };
+struct get_fwk_code_cb
+{
+    /** Callback used to fetch WiFi firmware code chunk by chunk. */
+    get_fwk_code_cb_t cb;
+    /** Opaque user argument passed to get_fwk_code_cb_t. */
+    void *arg;
+};
+struct get_fwk_maxsize_cb
+{
+    /** Callback used to query maximum firmware size for a boot mode. */
+    get_fwk_maxsize_cb_t cb;
+    /** Opaque user argument passed to get_fwk_maxsize_cb_t. */
+    void *arg;
+};
+
+struct wifi_get_ram_dump_path_cb
+{
+    /** Callback used to obtain WiFi RAM dump output path. */
+    wifi_get_ram_dump_path_t cb;
+    /** Opaque user argument passed to wifi_get_ram_dump_path_t. */
+    void *arg;
+};
+struct wifi_set_channel_map_cb
+{
+    /** Callbacks used to adjust BT/BLE channel maps according to WiFi channel. */
+    wifi_set_bt_channel_map_t bt_cb;
+    wifi_set_ble_channel_map_t ble_cb;
+    /** Opaque user argument passed to both channel-map callbacks. */
+    void *arg;
+};
+
 /**
  * @brief Aggregated WiFi control callbacks.
  *
@@ -100,6 +182,10 @@ struct wifi_ctl
     struct wifi_suspend_cb suspend;
     struct wifi_resume_cb resume;
     struct wifi_detect_slp_cb detect_slp;
+    struct get_fwk_code_cb get_fwk_code;
+    struct get_fwk_maxsize_cb get_fwk_maxsize;
+    struct wifi_get_ram_dump_path_cb get_ram_dump_path;
+    struct wifi_set_channel_map_cb set_channel_map;
 };
 /**
  * @brief Initialize the SWT6621S WLAN management layer.
