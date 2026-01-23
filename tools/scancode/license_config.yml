@@ -2,6 +2,7 @@ license:
   main: Apache-2.0
   additional: 
     - MIT
+    - BSD-2-Clause
   report_invalid: true
   report_unknown: true
   report_missing: true
