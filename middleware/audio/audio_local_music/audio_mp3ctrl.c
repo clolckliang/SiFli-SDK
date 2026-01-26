@@ -698,7 +698,6 @@ static int write_data(uint8_t is_new_data, mp3ctrl_handle ctrl, int16_t *outBuf,
 #if !TWS_MIX_ENABLE
         if (audio_device_is_a2dp_sink())
         {
-            RT_ASSERT(0);
             uint32_t bytes;
             if (mp3FrameInfo->samprate != 44100)
             {
@@ -740,7 +739,6 @@ static int write_data(uint8_t is_new_data, mp3ctrl_handle ctrl, int16_t *outBuf,
         else
 #endif
         {
-            RT_ASSERT(0);
 #if PKG_USING_VBE_DRC
             if (is_new_data)
             {
