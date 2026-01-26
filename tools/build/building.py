@@ -2926,7 +2926,7 @@ def AddDFU(SIFLI_SDK):
 
 def AddDFU_PAN(SIFLI_SDK):
     proj_path = None
-    proj_name = 'dfu_pan'
+    proj_name = 'dfu'
     proj_path = os.path.join(SIFLI_SDK, 'example/dfu_pan/project')
     AddChildProj(proj_name, proj_path, False)
 
