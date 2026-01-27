@@ -66,7 +66,7 @@ menuconfig SENSOR_USING_HR
                 string "PAH8007 I2C bus name"
                 default "i2c4"
             endif
-	menuconfig HR_USING_VC32S
+    menuconfig HR_USING_VC32S
             bool "VC32S"
             select RT_USING_SENSOR
             default n
@@ -87,10 +87,31 @@ menuconfig SENSOR_USING_HR
 		config VC32S_POW_PIN
                 int "Heart rate power pin"
                 default -1
-		config HR_USR_INT_MODE
+                config HR_USR_INT_MODE
                 bool "HR use INT mode"
                 default y
-            endif 
+            endif
+
+    menuconfig HR_USING_MAX30102
+            bool "MAX30102"
+            select RT_USING_SENSOR
+            default n
+            if HR_USING_MAX30102
+                config MAX30102_I2C_BUS
+                string "MAX30102 I2C bus name"
+                default "i2c4"
+                config HR_MODEL_NAME
+                string "MAX30102 model name"
+                default "max30102"
+
+                config MAX30102_INT_PIN
+                int "MAX30102 int pin"
+                default -1
+                config MAX30102_RST_PIN
+                int "MAX30102 reset pin"
+                default -1
+            endif
+
     endif
     
 menuconfig SENSOR_USING_HUMITURE
