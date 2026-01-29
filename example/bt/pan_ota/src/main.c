@@ -1,46 +1,9 @@
-/**
-  ******************************************************************************
-  * @file   main.c
-  * @author Sifli software development team
-  ******************************************************************************
-*/
-/**
- * @attention
- * Copyright (c) 2024 - 2025,  Sifli Technology
+<<<<<<< HEAD   (0e7583 [bug][example][peripheral_with_ota] Turn off ULOG_OUTPUT_LVL)
+=======
+/*
+ * SPDX-FileCopyrightText: 2026 SiFli Technologies(Nanjing) Co., Ltd
  *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form, except as embedded into a Sifli integrated circuit
- *    in a product or a software update for such product, must reproduce the above
- *    copyright notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of Sifli nor the names of its contributors may be used to endorse
- *    or promote products derived from this software without specific prior written permission.
- *
- * 4. This software, with or without modification, must only be used with a
- *    Sifli integrated circuit.
- *
- * 5. Any software provided in binary form under this license must not be reverse
- *    engineered, decompiled, modified and/or disassembled.
- *
- * THIS SOFTWARE IS PROVIDED BY SIFLI TECHNOLOGY "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL SIFLI TECHNOLOGY OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
- * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 
@@ -66,6 +29,9 @@ void HAL_MspInit(void)
 #include "bts2_app_inc.h"
 #include "ble_connection_manager.h"
 #include "bt_connection_manager.h"
+#include "bt_pan_ota.h"
+#include "dfu_pan_macro.h"
+#include "ota_network.h"
 
 #ifdef OTA_55X
     #include "dfu_service.h"
@@ -78,17 +44,41 @@ void HAL_MspInit(void)
 
 #define BT_APP_CONNECT_PAN  1
 #define PAN_TIMER_MS        3000
-
-#define URL "http://113.204.105.154:19000/ota-file/sdk/offline_install_h.bin"
+#define VERSION              "V1.0"
+char latest_version[32] = {0};
 
 typedef struct
 {
     BOOL bt_connected;
     bt_notify_device_mac_t bd_addr;
     rt_timer_t pan_connect_timer;
+    uint8_t pan_connected;
+    uint8_t retry_flag;
+    uint8_t retry_times;
+    uint8_t retry_max_times;
 } bt_app_t;
 static bt_app_t g_bt_app_env;
 static rt_mailbox_t g_bt_app_mb;
+
+void bt_pan_set_retry_flag(uint8_t enable)
+{
+    g_bt_app_env.retry_flag = enable;
+}
+
+uint8_t bt_pan_get_retry_flag(void)
+{
+    return g_bt_app_env.retry_flag;
+}
+
+void bt_pan_set_retry_times(uint8_t times)
+{
+    g_bt_app_env.retry_max_times = times;
+}
+
+uint8_t bt_pan_get_retry_time(void)
+{
+    return g_bt_app_env.retry_max_times;
+}
 
 void bt_app_connect_pan_timeout_handle(void *parameter)
 {
@@ -97,6 +87,35 @@ void bt_app_connect_pan_timeout_handle(void *parameter)
     return;
 }
 
+void pan_reconnect(void)
+{
+    const int reconnect_interval_ms = 10000; // 10��
+    while (g_bt_app_env.retry_times < g_bt_app_env.retry_max_times)
+    {
+        LOG_I("Attempting to reconnect PAN, attempt %d", g_bt_app_env.retry_times + 1);
+        if (!g_bt_app_env.retry_flag)
+        {
+            return;
+        }
+
+        if (g_bt_app_env.pan_connect_timer)
+        {
+            rt_timer_stop(g_bt_app_env.pan_connect_timer);
+        }
+
+        bt_interface_conn_ext((char *)&g_bt_app_env.bd_addr, BT_PROFILE_HID);
+        g_bt_app_env.retry_times++;
+        rt_thread_mdelay(reconnect_interval_ms);
+        // ����Ƿ����ӳɹ�
+        if (g_bt_app_env.pan_connected)
+        {
+            LOG_I("PAN reconnected successfully%d\n", g_bt_app_env.pan_connected);
+            g_bt_app_env.retry_times = 0;
+            return;
+        }
+    }
+    g_bt_app_env.retry_times = 0;
+}
 
 #if defined(BSP_USING_SPI_NAND) && defined(RT_USING_DFS)
 #include "dfs_file.h"
@@ -152,8 +171,7 @@ static int bt_app_interface_event_handle(uint16_t type, uint16_t event_id, uint8
                   info->mac.addr[4], info->mac.addr[3], info->mac.addr[2],
                   info->mac.addr[1], info->mac.addr[0], info->res);
             g_bt_app_env.bt_connected = FALSE;
-            memset(&g_bt_app_env.bd_addr, 0xFF, sizeof(g_bt_app_env.bd_addr));
-
+            // memset(&g_bt_app_env.bd_addr, 0xFF, sizeof(g_bt_app_env.bd_addr));
             if (g_bt_app_env.pan_connect_timer)
                 rt_timer_stop(g_bt_app_env.pan_connect_timer);
         }
@@ -175,7 +193,15 @@ static int bt_app_interface_event_handle(uint16_t type, uint16_t event_id, uint8
                 g_bt_app_env.bd_addr = info->mac;
                 pan_conn = 1;
             }
-            break;
+        }
+        break;
+        case BT_NOTIFY_COMMON_KEY_MISSING:
+        {
+            bt_notify_device_base_info_t *info =
+                (bt_notify_device_base_info_t *)data;
+            LOG_I("Key missing %d", info->res);
+            memset(&g_bt_app_env.bd_addr, 0xFF, sizeof(g_bt_app_env.bd_addr));
+            bt_cm_delete_bonded_devs_and_linkkey(info->mac.addr);
         }
         break;
         default:
@@ -209,18 +235,46 @@ static int bt_app_interface_event_handle(uint16_t type, uint16_t event_id, uint8
             {
                 rt_timer_stop(g_bt_app_env.pan_connect_timer);
             }
+            g_bt_app_env.pan_connected = 1;
         }
         break;
         case BT_NOTIFY_PAN_PROFILE_DISCONNECTED:
         {
             LOG_I("pan disconnect with remote device\n");
+            g_bt_app_env.pan_connected = 0;
         }
         break;
         default:
             break;
         }
     }
-
+    else if (type == BT_NOTIFY_HID)
+    {
+        switch (event_id)
+        {
+        case BT_NOTIFY_HID_PROFILE_CONNECTED:
+        {
+            LOG_I("HID connected\n");
+            if (!g_bt_app_env.pan_connected)
+            {
+                if (g_bt_app_env.pan_connect_timer)
+                {
+                    rt_timer_stop(g_bt_app_env.pan_connect_timer);
+                }
+                bt_interface_conn_ext((char *)&g_bt_app_env.bd_addr,
+                                      BT_PROFILE_PAN);
+            }
+        }
+        break;
+        case BT_NOTIFY_HID_PROFILE_DISCONNECTED:
+        {
+            LOG_I("HID disconnected\n");
+        }
+        break;
+        default:
+            break;
+        }
+    }
 
     return 0;
 }
@@ -250,6 +304,9 @@ int main(void)
 #endif // BSP_BT_CONNECTION_MANAGER
 
     bt_interface_register_bt_event_notify_callback(bt_app_interface_event_handle);
+    // for auto connect
+    bt_pan_set_retry_flag(1);
+    bt_pan_set_retry_times(5);
 
     sifli_ble_enable();
     while (1)
@@ -290,9 +347,112 @@ static void pan_cmd(int argc, char **argv)
         bt_app_connect_pan_timeout_handle(NULL);
     else if (strcmp(argv[1], "ota_pan") == 0)
     {
+#ifdef OTA_55X
         bt_dfu_pan_download(URL);
+#endif
+    }
+    else if (strcmp(argv[1], "set_retry_flag") == 0)
+    {
+        uint8_t flag = atoi(argv[2]);//Can it be enabled 1 open 0 stop
+        bt_pan_set_retry_flag(flag);
+    }
+    else if (strcmp(argv[1], "set_retry_time") == 0)
+    {
+        uint8_t times = atoi(argv[2]);//Can it be enabled 1 open 0 stop
+        bt_pan_set_retry_times(times);
+    }
+    else if (strcmp(argv[1], "autoconnect") == 0)
+    {
+        pan_reconnect();
     }
 }
+
 MSH_CMD_EXPORT(pan_cmd, Connect PAN to last paired device);
 
 
+
+// Register the device to the server (the server will record the firmware download based on the chip_id)
+static void check_dynamic_cmd(int argc, char **argv)
+{
+    LOG_I("Checking for new firmware version with dynamic chip_id...");
+
+    // Register the device first
+    int reg_result = register_device_with_server();
+    if (reg_result != 0)
+    {
+        LOG_W("Device registration failed");
+    }
+
+    // Get the chip ID and build the dynamic OTA URL
+    char *chip_id = get_client_id();
+    char *dynamic_ota_url = build_ota_query_url(chip_id);
+
+    // Query the latest version
+    int result = dfu_pan_query_latest_version(dynamic_ota_url, VERSION, latest_version, sizeof(latest_version));
+
+    // Determine whether there is an update based on the return value
+    BOOL needs_update = (result > 0) ? RT_TRUE : RT_FALSE;
+
+    if (needs_update)
+    {
+
+        LOG_I("New firmware version %s available. Type 'go' to start update.", latest_version);
+        if (dfu_pan_set_update_flags() != 0)// Set the update flag position
+        {
+            LOG_E("Failed to mark versions for update");
+            return;
+        }
+    }
+    else
+    {
+        LOG_I("No new firmware version available.");
+    }
+}
+MSH_CMD_EXPORT(check_dynamic_cmd, register device and check for new firmware version with dynamic chip_id);
+
+// Register the device to the server (the server will record the firmware download based on the chip_id)
+static void reset_to_dload_cmd(int argc, char **argv)
+{
+    // Execute OTA update process
+    // Check if there are any files that need to be updated
+    BOOL needs_update = RT_FALSE;
+    for (int i = 0; i < MAX_FIRMWARE_FILES; i++)
+    {
+        struct firmware_file_info temp_version;
+        if (dfu_pan_get_firmware_file_info(i, &temp_version) == 0 &&
+                temp_version.needs_update)
+        {
+            needs_update = RT_TRUE;
+            break;
+        }
+    }
+
+    if (!needs_update)
+    {
+        LOG_I("No firmware files need update.");
+        return;
+    }
+
+    LOG_I("System will reboot to OTA mode...");
+
+    // Delay for a while to ensure the message is displayed
+    rt_thread_mdelay(2000);
+
+    // Restart the system
+    HAL_PMU_Reboot();
+
+}
+MSH_CMD_EXPORT(reset_to_dload_cmd, register device and check for new firmware version with dynamic chip_id);
+
+static void show_version_cmd(int argc, char **argv)
+{
+    LOG_I("Current firmware version: %s", VERSION);
+}
+MSH_CMD_EXPORT(show_version_cmd, show the current firmware version);
+
+static void pan_ota_print_files_cmd(int argc, char **argv)
+{
+    dfu_pan_print_files();
+}
+MSH_CMD_EXPORT(pan_ota_print_files_cmd, Print OTA firmware files status);
+>>>>>>> CHANGE (67b43c [opt][example][pan] fix bug about pan delete link key)
