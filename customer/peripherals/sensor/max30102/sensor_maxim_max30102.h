@@ -75,7 +75,7 @@ int rt_hw_max30102_register(const char *name, struct rt_sensor_config *cfg);
  *
  * @return RT_EOK on success, -RT_ERROR on failure.
  */
-int rt_hw_max30102_init(void);
+int rt_hw_max30102_init(const char *name, struct rt_sensor_config *cfg);
 
 /**
  * @brief Deinitialize MAX30102 hardware resources.

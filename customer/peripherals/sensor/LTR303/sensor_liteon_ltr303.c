@@ -15,6 +15,10 @@
 static rt_size_t ltr303_fetch_data(struct rt_sensor_device *sensor, void *buf, rt_size_t len)
 {
     // ltr303_device_t hdev = sensor->parent.user_data;
+    if (buf == RT_NULL || len == 0)
+    {
+        return 0;
+    }
     struct rt_sensor_data *data = (struct rt_sensor_data *)buf;
 
     if (sensor->info.type == RT_SENSOR_CLASS_LIGHT)
@@ -25,9 +29,10 @@ static rt_size_t ltr303_fetch_data(struct rt_sensor_device *sensor, void *buf, r
         data->type = RT_SENSOR_CLASS_LIGHT;
         data->data.light = (rt_int32_t)(light_value);
         data->timestamp = rt_sensor_get_ts();
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 rt_err_t ltr303_set_power(ltr303_device_t hdev, rt_uint8_t power)
@@ -52,8 +57,8 @@ rt_err_t ltr303_set_power(ltr303_device_t hdev, rt_uint8_t power)
 static rt_err_t ltr303_control(struct rt_sensor_device *sensor, int cmd, void *args)
 {
     rt_err_t result = RT_EOK;
-    // ltr303_device_t hdev = sensor->parent.user_data;
-    ltr303_device_t hdev;
+    (void)sensor;
+    ltr303_device_t hdev = {0};
     switch (cmd)
     {
         case RT_SENSOR_CTRL_SET_POWER:

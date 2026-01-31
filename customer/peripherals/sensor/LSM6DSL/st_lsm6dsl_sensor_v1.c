@@ -236,6 +236,10 @@ static rt_size_t _lsm6dsl_polling_get_data(rt_sensor_t sensor, struct rt_sensor_
         LSM6DSL_Axes_t acce;
 
         int ret = LSM6DSL_ACC_GetAxes(&lsm6dsl, &acce);
+        if (ret != 0)
+        {
+            return 0;
+        }
 
         data->type = RT_SENSOR_CLASS_ACCE;
         data->data.acce.x = acce.x;
@@ -248,7 +252,10 @@ static rt_size_t _lsm6dsl_polling_get_data(rt_sensor_t sensor, struct rt_sensor_
     {
         LSM6DSL_Axes_t gyro;
 
-        LSM6DSL_GYRO_GetAxes(&lsm6dsl, &gyro);
+        if (LSM6DSL_GYRO_GetAxes(&lsm6dsl, &gyro) != 0)
+        {
+            return 0;
+        }
 
         data->type = RT_SENSOR_CLASS_GYRO;
         data->data.gyro.x = gyro.x;
@@ -349,6 +356,13 @@ int rt_hw_lsm6dsl_init(const char *name, struct rt_sensor_config *cfg)
     rt_int8_t result;
     rt_sensor_t sensor_acce = RT_NULL, sensor_gyro = RT_NULL, sensor_step = RT_NULL;
 
+    result = _lsm6dsl_init(&cfg->intf);
+    if (result != RT_EOK)
+    {
+        LOG_E("_lsm6dsl init err code: %d", result);
+        return -RT_ERROR;
+    }
+
 #ifdef PKG_USING_LSM6DSL_ACCE
     /* accelerometer sensor register */
     {
@@ -428,13 +442,6 @@ int rt_hw_lsm6dsl_init(const char *name, struct rt_sensor_config *cfg)
         }
     }
 #endif
-    result = _lsm6dsl_init(&cfg->intf);
-    if (result != RT_EOK)
-    {
-        LOG_E("_lsm6dsl init err code: %d", result);
-        goto __exit;
-    }
-
     LOG_I("sensor init success");
     return RT_EOK;
 

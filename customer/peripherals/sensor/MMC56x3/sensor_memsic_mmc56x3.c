@@ -9,6 +9,10 @@
 static rt_size_t mmc56x3_fetch_data(struct rt_sensor_device *sensor, void *buf, rt_size_t len)
 {
     // mmc56x3_device_t hdev = sensor->parent.user_data;
+    if (buf == RT_NULL || len == 0)
+    {
+        return 0;
+    }
     struct rt_sensor_data *data = (struct rt_sensor_data *)buf;
 
     if (sensor->info.type == RT_SENSOR_CLASS_MAG)
@@ -20,9 +24,10 @@ static rt_size_t mmc56x3_fetch_data(struct rt_sensor_device *sensor, void *buf, 
         data->data.mag.y = mag.y;
         data->data.mag.z = mag.z;
         data->timestamp = rt_sensor_get_ts();
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 rt_err_t mmc56x3_set_power(rt_uint8_t power)
@@ -46,6 +51,7 @@ rt_err_t mmc56x3_set_power(rt_uint8_t power)
 static rt_err_t mmc56x3_control(struct rt_sensor_device *sensor, int cmd, void *args)
 {
     rt_err_t result = RT_EOK;
+    (void)sensor;
 
     switch (cmd)
     {
@@ -61,7 +67,7 @@ static rt_err_t mmc56x3_control(struct rt_sensor_device *sensor, int cmd, void *
         }
         case RT_SENSOR_CTRL_SET_ODR:
         {
-            uint16_t odr = (uint16_t)args;
+            uint16_t odr = (rt_uint32_t)args & 0xffff;
             MMC56x3_SetDataRate(odr);
             result = RT_EOK;
             break;
@@ -86,7 +92,11 @@ int rt_hw_mmc56x3_init(const char *name, struct rt_sensor_config *cfg)
 {
     int result = -RT_ERROR;
     rt_sensor_t sensor = RT_NULL;
-    MMC56x3_Init(cfg);
+    if (MMC56x3_Init(cfg) != RT_EOK)
+    {
+        LOG_E("mmc56x3 init failed");
+        return -RT_ERROR;
+    }
 
     sensor = rt_calloc(1, sizeof(struct rt_sensor_device));
     if (RT_NULL == sensor)

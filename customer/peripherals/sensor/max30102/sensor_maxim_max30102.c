@@ -137,8 +137,8 @@ static rt_err_t _max30102_init(void)
  */
 static rt_err_t _max30102_set_range(rt_sensor_t sensor, rt_int32_t range)
 {
-    RT_UNUSED(sensor);
-    RT_UNUSED(range);
+    (void)sensor;
+    (void)range;
     return RT_EOK;
 }
 
@@ -152,8 +152,8 @@ static rt_err_t _max30102_set_range(rt_sensor_t sensor, rt_int32_t range)
  */
 static rt_err_t _max30102_self_test(rt_sensor_t sensor, rt_uint8_t mode)
 {
-    RT_UNUSED(sensor);
-    RT_UNUSED(mode);
+    (void)sensor;
+    (void)mode;
 
     if (_max30102_init() != RT_EOK)
     {
@@ -178,7 +178,7 @@ static rt_err_t _max30102_self_test(rt_sensor_t sensor, rt_uint8_t mode)
  */
 static rt_err_t _max30102_hr_set_mode(rt_sensor_t sensor, rt_uint8_t mode)
 {
-    RT_UNUSED(sensor);
+    (void)sensor;
 
     if (mode == RT_SENSOR_MODE_POLLING)
     {
@@ -202,7 +202,7 @@ static rt_err_t _max30102_hr_set_mode(rt_sensor_t sensor, rt_uint8_t mode)
  */
 static rt_err_t _max30102_set_power(rt_sensor_t sensor, rt_uint8_t power)
 {
-    RT_UNUSED(sensor);
+    (void)sensor;
 
     switch (power)
     {
@@ -335,7 +335,7 @@ static rt_err_t max30102_control(struct rt_sensor_device *sensor, int cmd, void 
 {
     rt_err_t result = RT_EOK;
 
-    RT_UNUSED(sensor);
+    (void)sensor;
 
     switch (cmd)
     {
@@ -430,46 +430,13 @@ int rt_hw_max30102_register(const char *name, struct rt_sensor_config *cfg)
 }
 
 /**
- * @brief Register MAX30102 sensor at component initialization.
- *
- * @return RT_EOK on success, -RT_ERROR on failure.
- */
-int max30102_sensor_register(void)
-{
-    struct rt_sensor_config cfg = {0};
-
-    cfg.intf.dev_name = MAX30102_I2C_BUS;
-    cfg.irq_pin.pin = MAX30102_INT_PIN;
-
-    return rt_hw_max30102_register(HR_MODEL_NAME, &cfg);
-}
-
-INIT_COMPONENT_EXPORT(max30102_sensor_register);
-
-/**
  * @brief Initialize MAX30102 hardware and cached state.
  *
  * @return RT_EOK on success, -RT_ERROR on failure.
  */
-int rt_hw_max30102_init(void)
+int rt_hw_max30102_init(const char *name, struct rt_sensor_config *cfg)
 {
-    rt_int8_t result = RT_EOK;
-
-    if (!max30102_inited)
-    {
-        result = _max30102_init();
-        if (result != RT_EOK)
-        {
-            LOG_E("max30102 init err code: %d", result);
-            if (max30102_dev)
-            {
-                rt_free(max30102_dev);
-                max30102_dev = RT_NULL;
-            }
-        }
-    }
-
-    return result;
+    return rt_hw_max30102_register(name, cfg);
 }
 
 /**
