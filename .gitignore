@@ -10,6 +10,7 @@
 .sconsign.dblite
 .DS_Store
 .idea
+.agent
 Kconfig.tmp
 .venv
 _*/
